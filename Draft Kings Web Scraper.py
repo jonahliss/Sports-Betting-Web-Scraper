@@ -14,10 +14,11 @@ def appendDataTeams(html_list, new_list):
         new_list.append(item.text)
 
 class Sport:
-    def __init__(self, URL):
+    def __init__(self, URL, classes):
         self.url = URL
         self.page = ''
         self.soup = ''
+        self.classes = classes
         self.spreads_html = []
         self.odds_html = []
         self.teams_html = []
@@ -28,9 +29,9 @@ class Sport:
     def retrieveData(self):
         self.page = requests.get(self.url)
         self.soup = BeautifulSoup(self.page.content, "html.parser")
-        self.spreads_html = self.soup.find_all(class_="sportsbook-outcome-cell__line")
-        self.odds_html = self.soup.find_all(class_="sportsbook-odds american default-color")
-        self.teams_html = self.soup.find_all(class_="event-cell__name-text")
+        self.spreads_html = self.soup.find_all(class_=self.classes[0])
+        self.odds_html = self.soup.find_all(class_=self.classes[1])
+        self.teams_html = self.soup.find_all(class_=self.classes[2])
     def sortData(self):
         appendData(self.spreads_html, self.spreads)
         appendData(self.odds_html, self.odds)
@@ -41,22 +42,24 @@ class Sport:
                             pd.DataFrame({'Odds':self.odds})], axis=1)
         print(self.df)
         
-NFL = Sport("https://sportsbook.draftkings.com/leagues/football/88670561")
+draftkings_classes = ['sportsbook-outcome-cell__line','sportsbook-odds american default-color','event-cell__name-text']
+        
+NFL = Sport("https://sportsbook.draftkings.com/leagues/football/88670561", draftkings_classes)
 NFL.retrieveData()
 NFL.sortData()
 NFL.presentData()
 
-CFB = Sport("https://sportsbook.draftkings.com/leagues/football/88670775")
+CFB = Sport("https://sportsbook.draftkings.com/leagues/football/88670775", draftkings_classes)
 CFB.retrieveData()
 CFB.sortData()
 CFB.presentData()
 
-NBA = Sport("https://sportsbook.draftkings.com/leagues/basketball/88670846")
+NBA = Sport("https://sportsbook.draftkings.com/leagues/basketball/88670846", draftkings_classes)
 NBA.retrieveData()
 NBA.sortData()
 NBA.presentData()
 
-CBB = Sport("https://sportsbook.draftkings.com/leagues/basketball/88670771")
+CBB = Sport("https://sportsbook.draftkings.com/leagues/basketball/88670771", draftkings_classes)
 CBB.retrieveData()
 CBB.sortData()
 CBB.presentData()
