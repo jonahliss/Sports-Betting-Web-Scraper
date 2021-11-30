@@ -40,7 +40,7 @@ class SportStatic:
         self.df = pd.DataFrame()
         self.df = pd.concat([self.df, pd.DataFrame({'Teams':self.teams}),pd.DataFrame({'Spreads':self.spreads}),
                             pd.DataFrame({'Odds':self.odds})], axis=1)
-        print(self.df)
+        return self.df
         
 draftkings_classes = ['sportsbook-outcome-cell__line','sportsbook-odds american default-color','event-cell__name-text']
         
