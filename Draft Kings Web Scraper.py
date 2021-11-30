@@ -13,7 +13,7 @@ def appendDataTeams(html_list, new_list):
     for item in html_list:
         new_list.append(item.text)
 
-class Sport:
+class SportStatic:
     def __init__(self, URL, classes):
         self.url = URL
         self.page = ''
@@ -44,22 +44,26 @@ class Sport:
         
 draftkings_classes = ['sportsbook-outcome-cell__line','sportsbook-odds american default-color','event-cell__name-text']
         
-NFL = Sport("https://sportsbook.draftkings.com/leagues/football/88670561", draftkings_classes)
+# Draft Kings NFL
+NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561", draftkings_classes)
 NFL.retrieveData()
 NFL.sortData()
 NFL.presentData()
 
-CFB = Sport("https://sportsbook.draftkings.com/leagues/football/88670775", draftkings_classes)
+# Draft Kings CFB
+CFB = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775", draftkings_classes)
 CFB.retrieveData()
 CFB.sortData()
 CFB.presentData()
 
-NBA = Sport("https://sportsbook.draftkings.com/leagues/basketball/88670846", draftkings_classes)
+# Draft Kings NBA
+NBA = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846", draftkings_classes)
 NBA.retrieveData()
 NBA.sortData()
 NBA.presentData()
 
-CBB = Sport("https://sportsbook.draftkings.com/leagues/basketball/88670771", draftkings_classes)
+# Draft Kings CBB
+CBB = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771", draftkings_classes)
 CBB.retrieveData()
 CBB.sortData()
 CBB.presentData()
