@@ -43,6 +43,8 @@ class SportStatic:
         appendDataTeams(self.teams_html, self.teams)
 
     def presentData(self):
+        self.retrieveData()
+        self.sortData()
         self.df = pd.DataFrame()
         self.df = pd.concat([self.df, pd.DataFrame({'Teams': self.teams}), pd.DataFrame({'Spreads': self.spreads}),
                              pd.DataFrame({'Odds': self.odds})], axis=1)
@@ -54,24 +56,12 @@ draftkings_classes = ['sportsbook-outcome-cell__line', 'sportsbook-odds american
 
 # Draft Kings NFL
 NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561", draftkings_classes)
-NFL.retrieveData()
-NFL.sortData()
-NFL.presentData()
 
 # Draft Kings CFB
 CFB = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775", draftkings_classes)
-CFB.retrieveData()
-CFB.sortData()
-CFB.presentData()
 
 # Draft Kings NBA
 NBA = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846", draftkings_classes)
-NBA.retrieveData()
-NBA.sortData()
-NBA.presentData()
 
 # Draft Kings CBB
 CBB = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771", draftkings_classes)
-CBB.retrieveData()
-CBB.sortData()
-CBB.presentData()

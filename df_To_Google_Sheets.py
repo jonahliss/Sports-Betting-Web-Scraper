@@ -3,6 +3,7 @@ import pandas as pd
 import Draft_Kings_Web_Scraper as dkweb
 import Sunday_Tilt_Web_Scraper as stweb
 import Ubet_Web_Scraper as ubweb
+import Wager_Wizard_Web_Scraper as wwweb
 
 # authorize user to connect to google sheet
 # only needs to be done once
@@ -13,7 +14,7 @@ gc = gspread.oauth(
 
 sh = gc.open("BettingScraper")
 worksheetNFL = sh.get_worksheet(0)
-# sh.add_worksheet(title="CFB", rows=50, cols=10)
+# sh.add_worksheet(title="CFB", rows=50, cols=30)
 worksheetCFB = sh.get_worksheet(1)
 # sh.add_worksheet(title="NBA", rows=50, cols=10)
 worksheetNBA = sh.get_worksheet(2)
@@ -26,49 +27,79 @@ worksheetCBB = sh.get_worksheet(3)
 
 draftkings_classes = ['sportsbook-outcome-cell__line','sportsbook-odds american default-color','event-cell__name-text']
 
-NFL = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561", draftkings_classes)
-NFL.retrieveData()
-NFL.sortData()
-df = NFL.presentData()
+# grab NFL worksheet
 worksheetNFL.clear()
+
+NFL = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561", draftkings_classes)
+df = NFL.presentData()
 worksheetNFL.update([df.columns.values.tolist()] + df.values.tolist())
 
+# NFL = stweb.SportDynamic('https://www.sundaytilt.com/', 'basketball', 'NBA ')
+# stdfNFL = NFL.presentData()
+# worksheetNFL.update('D1:', [stdfNFL.columns.values.tolist()] + stdfNFL.values.tolist())
+
+NFL = ubweb.SportDynamic('https://ubet.ag/', 'NFL')
+ubdfNFL = NFL.presentData()
+worksheetNFL.update('G:I', [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+
+NFL = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"11,1\",this)\'")
+wwdfNFL = NFL.presentData()
+worksheetNFL.update('J:L', [wwdfNFL.columns.values.tolist()] + wwdfNFL.values.tolist())
+
 # # grab CFB worksheet
-#
-# CFB = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775", draftkings_classes)
-# CFB.retrieveData()
-# CFB.sortData()
-# dfCFB = CFB.presentData()
-# worksheetCFB.clear()
-# worksheetCFB.update([dfCFB.columns.values.tolist()] + dfCFB.values.tolist())
+worksheetCFB.clear()
+CFB = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775", draftkings_classes)
+dfCFB = CFB.presentData()
+worksheetCFB.update([dfCFB.columns.values.tolist()] + dfCFB.values.tolist())
+
+# CFB = stweb.SportDynamic('https://www.sundaytilt.com/', 'basketball', 'NBA ')
+# stdfCFB = CFB.presentData()
+# worksheetCFB.update('D1:', [stdfCFB.columns.values.tolist()] + stdfCFB.values.tolist())
+
+CFB = ubweb.SportDynamic('https://ubet.ag/', 'NCAA FOOTBALL')
+ubdfCFB = CFB.presentData()
+worksheetCFB.update('G:I', [ubdfCFB.columns.values.tolist()] + ubdfCFB.values.tolist())
+
+# TODO fix the static string param
+CFB = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"12,1\",this)\'")
+wwdfCFB = CFB.presentData()
+worksheetCFB.update('J:L', [wwdfCFB.columns.values.tolist()] + wwdfCFB.values.tolist())
 
 # grab NBA worksheet
+worksheetNBA.clear()
 
-# NBA = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846", draftkings_classes)
-# NBA.retrieveData()
-# NBA.sortData()
-# dfNBA = NBA.presentData()
-# worksheetNBA.clear()
-# print([dfNBA.columns.values.tolist()] + dfNBA.values.tolist())
-# worksheetNBA.update('D1:G50', [dfNBA.columns.values.tolist()] + dfNBA.values.tolist())
+NBA = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846", draftkings_classes)
+dfNBA = NBA.presentData()
+worksheetNBA.update('A:C', [dfNBA.columns.values.tolist()] + dfNBA.values.tolist())
+
+# NBA = stweb.SportDynamic('https://www.sundaytilt.com/', 'basketball', 'NBA ')
+# stdfNBA = NBA.presentData()
+# worksheetNBA.update('D:F', [stdfNBA.columns.values.tolist()] + stdfNBA.values.tolist())
+
+NBA = ubweb.SportDynamic('https://ubet.ag/', 'NBA')
+ubdfNBA = NBA.presentData()
+worksheetNBA.update('G:I', [ubdfNBA.columns.values.tolist()] + ubdfNBA.values.tolist())
+
+NBA = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"9,1\",this)\'")
+wwdfNBA = NBA.presentData()
+worksheetNBA.update('J:L', [wwdfNBA.columns.values.tolist()] + wwdfNBA.values.tolist())
 
 # grab CBB worksheet
+worksheetCBB.clear()
 
-# CBB = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771", draftkings_classes)
-# CBB.retrieveData()
-# CBB.sortData()
-# dfCBB = CBB.presentData()
-# worksheetCBB.clear()
-# worksheetCBB.update([dfCBB.columns.values.tolist()] + dfCBB.values.tolist())
+CBB = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771", draftkings_classes)
+dfCBB = CBB.presentData()
+worksheetCBB.update([dfCBB.columns.values.tolist()] + dfCBB.values.tolist())
 
-# NFL = stweb.SportDynamic('https://www.sundaytilt.com/', 'football', 'NFL')
-# NFL.launchDriver()
-# NFL.enterDriver()
-# NFL.navigateDriver()
-# NFL.retrieveData()
-# NFL.sortData()
-# stdfNFL = NFL.presentData()
+# CBB = stweb.SportDynamic('https://www.sundaytilt.com/', 'basketball', 'NCAA Basketball')
+# stdfCBB = CBB.presentData()
+# worksheetCBB.update('D1:', [stdfCBB.columns.values.tolist()] + stdfCBB.values.tolist())
 
-NCAA_Football = ubweb.SportDynamic('https://ubet.ag/', 'NCAA FOOTBALL')
-sport = "NBA"
-print('//span[text()=\"'+sport+'\"]')
+CBB = ubweb.SportDynamic('https://ubet.ag/', 'NCAA BASKETBALL')
+ubdfCBB = CBB.presentData()
+worksheetCBB.update('G:I', [ubdfCBB.columns.values.tolist()] + ubdfCBB.values.tolist())
+
+CBB = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"10,1\",this)\'")
+wwdfCBB = CBB.presentData()
+worksheetCBB.update('J:L', [wwdfCBB.columns.values.tolist()] + wwdfCBB.values.tolist())
+

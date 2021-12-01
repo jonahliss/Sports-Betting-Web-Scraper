@@ -30,7 +30,6 @@ def appendDataOdds(html_list, new_list):
             new_list.append(item.text)
         i += 1
 
-
 class SportDynamic:
     def __init__(self, url, league):
         self.url = url
@@ -68,16 +67,13 @@ class SportDynamic:
         appendDataOdds(self.odds_html, self.odds_list)
 
     def presentData(self):
+        self.launchDriver()
+        self.enterDriver()
+        self.navigateDriver()
+        self.retrieveData()
+        self.sortData()
         df = pd.DataFrame()
         df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
                         pd.DataFrame({'Odds': self.odds_list})], axis=1)
-        return self.df
-
-
-NBA = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NCAA_Basketball)
-NBA.launchDriver()
-NBA.enterDriver()
-NBA.navigateDriver()
-NBA.retrieveData()
-NBA.sortData()
-NBA.presentData()
+        df = df.fillna('')
+        return df

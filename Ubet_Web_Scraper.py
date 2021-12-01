@@ -67,16 +67,13 @@ class SportDynamic:
         appendDataOdds(self.odds_html, self.odds_list)
 
     def presentData(self):
+        self.launchDriver()
+        self.enterDriver()
+        self.navigateDriver()
+        self.retrieveData()
+        self.sortData()
         df = pd.DataFrame()
         df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
                         pd.DataFrame({'Odds': self.odds_list})], axis=1)
-        return self.df
-
-
-NCAA_Football = SportDynamic('https://ubet.ag/', 'NCAA FOOTBALL')
-NCAA_Football.launchDriver()
-NCAA_Football.enterDriver()
-NCAA_Football.navigateDriver()
-NCAA_Football.retrieveData()
-NCAA_Football.sortData()
-NCAA_Football.presentData()
+        df = df.fillna('')
+        return df
