@@ -45,9 +45,11 @@ class SportDynamic:
         self.spreads_list = []
         self.odds_list = []
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
     def launchDriver(self):
         self.driver.get(self.url)
         time.sleep(5)
+
     def enterDriver(self):
         username = self.driver.find_element(By.NAME, "customerID")
         password = self.driver.find_element(By.NAME, "Password")
@@ -55,29 +57,34 @@ class SportDynamic:
         password.send_keys("soccer1")
         login = self.driver.find_element(By.XPATH, '//button[text()="LOGIN"]')
         login.click()
+
     def navigateDriver(self):
         time.sleep(5)
-        enter_sport = self.driver.find_element(By.CLASS_NAME, "icon-"+self.sport)
+        enter_sport = self.driver.find_element(By.CLASS_NAME, "icon-" + self.sport)
         enter_sport.click()
         enter_league = self.driver.find_element(By.CSS_SELECTOR, "ul[data-event='BASKETBALL'] li:nth-of-type(11)")
         enter_league.click()
-        #button = self.driver.find_element(By.XPATH, '//span[text()="Continue"]')
-        #button.click()
+        # button = self.driver.find_element(By.XPATH, '//span[text()="Continue"]')
+        # button.click()
+
     def retrieveData(self):
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
         self.teams_html = soup.find_all(class_='team')
         self.spreads_html = soup.find_all(class_='line-play buy-skin')
         self.odds_html = soup.find_all(class_='line-play')
+
     def sortData(self):
         appendDataTeams(self.teams_html, self.teams_list)
         appendDataSpreads(self.spreads_html, self.spreads_list)
         appendDataOdds(self.odds_html, self.odds_list)
+
     def presentData(self):
         df = pd.DataFrame()
-        df = pd.concat([df, pd.DataFrame({'Teams':self.teams_list}),pd.DataFrame({'Spreads':self.spreads_list}),
-                pd.DataFrame({'Odds':self.odds_list})], axis=1)
-        print(df)
+        df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
+                        pd.DataFrame({'Odds': self.odds_list})], axis=1)
+        return self.df
+
 
 NFL = SportDynamic('https://www.sundaytilt.com/', 'basketball', 'NBA ')
 NFL.launchDriver()
