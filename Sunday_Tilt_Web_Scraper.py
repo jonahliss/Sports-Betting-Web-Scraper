@@ -87,6 +87,7 @@ class SportDynamic:
 
 
 NFL = SportDynamic('https://www.sundaytilt.com/', 'basketball', 'NBA ')
+
 NFL.launchDriver()
 NFL.enterDriver()
 NFL.navigateDriver()
