@@ -77,3 +77,41 @@ class SportDynamic:
                         pd.DataFrame({'Odds': self.odds_list})], axis=1)
         df = df.fillna('')
         return df
+
+'''
+# Wager Wizard NFL
+NFL = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NFL)
+NFL.launchDriver()
+NFL.enterDriver()
+NFL.navigateDriver()
+NFL.retrieveData()
+NFL.sortData()
+NFL.presentData()
+
+# Wager Wizard CFB
+CFB = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NCAA_Football)
+CFB.launchDriver()
+CFB.enterDriver()
+CFB.navigateDriver()
+CFB.retrieveData()
+CFB.sortData()
+CFB.presentData()
+
+# Wager Wizard NBA
+NBA = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NBA)
+NBA.launchDriver()
+NBA.enterDriver()
+NBA.navigateDriver()
+NBA.retrieveData()
+NBA.sortData()
+NBA.presentData()
+
+# Wager Wizard CBB
+CBB = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NCAA_Basketball)
+CBB.launchDriver()
+CBB.enterDriver()
+CBB.navigateDriver()
+CBB.retrieveData()
+CBB.sortData()
+CBB.presentData()
+'''
