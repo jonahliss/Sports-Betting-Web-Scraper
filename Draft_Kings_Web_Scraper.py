@@ -53,7 +53,7 @@ class SportStatic:
                             pd.DataFrame({'Odds':self.odds})], axis=1)
         print(self.df)
 
-        
+'''
 # Draft Kings NFL
 NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561")
 NFL.retrieveData()
@@ -77,3 +77,4 @@ CBB = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771
 CBB.retrieveData()
 CBB.sortData()
 CBB.presentData()
+'''
