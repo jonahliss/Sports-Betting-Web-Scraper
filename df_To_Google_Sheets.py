@@ -40,7 +40,7 @@ worksheetNFL.update([df.columns.values.tolist()] + df.values.tolist())
 
 NFL = ubweb.SportDynamic('https://ubet.ag/', 'NFL')
 ubdfNFL = NFL.presentData()
-worksheetNFL.update('D:F', [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+worksheetNFL.update('F:H', [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
 
 # NFL = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"11,1\",this)\'")
 # wwdfNFL = NFL.presentData()
@@ -58,7 +58,7 @@ worksheetCFB.update([dfCFB.columns.values.tolist()] + dfCFB.values.tolist())
 
 CFB = ubweb.SportDynamic('https://ubet.ag/', 'NCAA FOOTBALL')
 ubdfCFB = CFB.presentData()
-worksheetCFB.update('D:F', [ubdfCFB.columns.values.tolist()] + ubdfCFB.values.tolist())
+worksheetCFB.update('F:H', [ubdfCFB.columns.values.tolist()] + ubdfCFB.values.tolist())
 
 # # TODO fix the static string param
 # CFB = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"12,1\",this)\'")
@@ -78,7 +78,7 @@ worksheetNBA.update('A:C', [dfNBA.columns.values.tolist()] + dfNBA.values.tolist
 
 NBA = ubweb.SportDynamic('https://ubet.ag/', 'NBA')
 ubdfNBA = NBA.presentData()
-worksheetNBA.update('D:F', [ubdfNBA.columns.values.tolist()] + ubdfNBA.values.tolist())
+worksheetNBA.update('F:H', [ubdfNBA.columns.values.tolist()] + ubdfNBA.values.tolist())
 
 # NBA = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"9,1\",this)\'")
 # wwdfNBA = NBA.presentData()
@@ -95,9 +95,9 @@ worksheetCBB.update([dfCBB.columns.values.tolist()] + dfCBB.values.tolist())
 # stdfCBB = CBB.presentData()
 # worksheetCBB.update('D1:', [stdfCBB.columns.values.tolist()] + stdfCBB.values.tolist())
 
-CBB = ubweb.SportDynamic('https://ubet.ag/', 'NCAA BASKETBALL')
+CBB = ubweb.SportDynamic('https://ubet.ag/', 'NCAA BASKETBALL - MEN')
 ubdfCBB = CBB.presentData()
-worksheetCBB.update('D:F', [ubdfCBB.columns.values.tolist()] + ubdfCBB.values.tolist())
+worksheetCBB.update('F:H', [ubdfCBB.columns.values.tolist()] + ubdfCBB.values.tolist())
 
 # CBB = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"10,1\",this)\'")
 # wwdfCBB = CBB.presentData()

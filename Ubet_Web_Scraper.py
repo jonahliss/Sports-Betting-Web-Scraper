@@ -79,6 +79,10 @@ class SportDynamic:
         df = df.fillna('')
         return df
 
+
+CBB = SportDynamic('https://ubet.ag/', 'NCAA BASKETBALL - MEN')
+ubdfCBB = CBB.presentData()
+
 '''
 # Ubet NFL
 NFL = SportDynamic('https://ubet.ag/', 'NFL')

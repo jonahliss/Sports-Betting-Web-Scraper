@@ -56,6 +56,7 @@ class SportStatic:
         self.df = pd.DataFrame()
         self.df = pd.concat([self.df, pd.DataFrame({'Teams': self.teams}), pd.DataFrame({'Spreads': self.spreads}),
                              pd.DataFrame({'Odds': self.odds})], axis=1)
+        self.df = self.df.fillna('')
         return self.df
 
 
