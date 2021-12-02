@@ -78,6 +78,7 @@ class SportDynamic:
         df = df.fillna('')
         return df
 
+'''
 # Ubet NFL
 NFL = SportDynamic('https://ubet.ag/', 'NFL')
 NFL.launchDriver()
@@ -113,3 +114,4 @@ CBB.navigateDriver()
 CBB.retrieveData()
 CBB.sortData()
 CBB.presentData()
+'''
