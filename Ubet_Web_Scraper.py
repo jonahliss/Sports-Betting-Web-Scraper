@@ -77,3 +77,39 @@ class SportDynamic:
                         pd.DataFrame({'Odds': self.odds_list})], axis=1)
         df = df.fillna('')
         return df
+
+# Ubet NFL
+NFL = SportDynamic('https://ubet.ag/', 'NFL')
+NFL.launchDriver()
+NFL.enterDriver()
+NFL.navigateDriver()
+NFL.retrieveData()
+NFL.sortData()
+NFL.presentData()
+
+# Ubet CFB
+CFB = SportDynamic('https://ubet.ag/', 'NCAA FOOTBALL')
+CFB.launchDriver()
+CFB.enterDriver()
+CFB.navigateDriver()
+CFB.retrieveData()
+CFB.sortData()
+CFB.presentData()
+
+# Ubet NBA
+NBA = SportDynamic('https://ubet.ag/', 'NBA')
+NBA.launchDriver()
+NBA.enterDriver()
+NBA.navigateDriver()
+NBA.retrieveData()
+NBA.sortData()
+NBA.presentData()
+
+# Ubet CBB
+CBB = SportDynamic('https://ubet.ag/', 'NCAA BASKETBALL - MEN')
+CBB.launchDriver()
+CBB.enterDriver()
+CBB.navigateDriver()
+CBB.retrieveData()
+CBB.sortData()
+CBB.presentData()
