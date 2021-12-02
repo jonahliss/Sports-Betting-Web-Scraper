@@ -56,6 +56,7 @@ class SportDynamic:
 
     def retrieveData(self):
         html = self.driver.page_source
+        self.driver.quit()
         soup = BeautifulSoup(html, "html.parser")
         self.teams_html = soup.find_all(class_='text-black')
         self.spreads_html = soup.find_all(class_='btn btn-danger')
