@@ -6,13 +6,13 @@ import Sunday_Tilt_Web_Scraper as stweb
 import Ubet_Web_Scraper as ubweb
 import Wager_Wizard_Web_Scraper as wwweb
 
+#%%
 # authorize user to connect to google sheet
 # only needs to be done once
-gc = gspread.oauth(
-    credentials_filename='./credentials.json',
-    authorized_user_filename='./authorized_user.json'
-)
+gc = gspread.oauth()
+print("Connected to Google Sheet")
 
+#%%
 sh = gc.open("BettingScraper")
 worksheetNFL = sh.get_worksheet(2)
 # sh.add_worksheet(title="CFB", rows=50, cols=30)
@@ -22,7 +22,7 @@ worksheetNBA = sh.get_worksheet(4)
 # sh.add_worksheet(title="CBB", rows=100, cols=10)
 worksheetCBB = sh.get_worksheet(5)
 
-
+#%%
 # check if worksheet works
 # print(worksheet.acell('A1').value)
 

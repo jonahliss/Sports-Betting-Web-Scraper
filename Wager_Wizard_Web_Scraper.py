@@ -3,9 +3,8 @@ import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
 NFL = "\'SportClick(\"11,1\",this)\'"
 NCAA_Football = "\'SportClick(\"12,1\",this)\'"
@@ -42,7 +41,11 @@ class SportDynamic:
         self.odds_list = []
 
     def launchDriver(self):
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        self.driver = webdriver.Chrome(ChromeDriverManager().install())
         self.driver.get(self.url)
 
     def enterDriver(self):
