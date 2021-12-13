@@ -71,9 +71,32 @@ class SportDynamic:
         self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='BASKETBALL'] a").click()
         time.sleep(1)
         # inserts the sport and league into the appropriate css locator
-        enter_league = self.driver.find_element(By.CSS_SELECTOR,
-                                                "#{} > div > ul li:nth-of-type({})".format(self.sport, self.league))
-        enter_league.click()
+        enter_nfl = self.driver.find_elements(By.CSS_SELECTOR,
+                                              "#{} > div > ul > li".format("FOOTBALL"))
+        enter_nfl[0].find_element(By.CSS_SELECTOR, 'div').click()
+        enter_nba = self.driver.find_elements(By.CSS_SELECTOR,
+                                              "#{} > div > ul > li".format("BASKETBALL"))
+
+        for checkbox in enter_nfl:
+            try:
+                if checkbox.get_attribute("data-sub-event") != None:
+                    checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
+                    time.sleep(1)
+                    nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
+                                                             "div[data-field='link-parent'] > div > ul > li")
+                    for nested in nested_checkbox:
+                        nested.find_element(By.CSS_SELECTOR, 'div').click()
+                else:
+                    checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+            except:
+                pass
+        for checkbox in enter_nba:
+            try:
+                temp = checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+            except:
+                pass
+        # self.driver.find_element(By.CSS_SELECTOR, "#{} > div > ul > li > a".format(self.sport)).click()
+        time.sleep(1)
         # button = self.driver.find_element(By.XPATH, '//span[text()="Continue"]')
         # button.click()
 
@@ -101,3 +124,8 @@ class SportDynamic:
                         pd.DataFrame({'Odds': self.odds_list})], axis=1)
         df = df.fillna('')
         return df
+
+
+NFL = SportDynamic('https://www.sundaytilt.com/', 'BASKETBALL', 'NBA ')
+stdfNFL = NFL.presentData()
+print(stdfNFL)
