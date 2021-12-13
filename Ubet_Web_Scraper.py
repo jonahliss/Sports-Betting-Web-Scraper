@@ -54,12 +54,16 @@ class SportDynamic:
 
     def navigateDriver(self):
         self.driver.find_element(By.ID, "ctl00_lnkSports").click()
-        self.driver.find_element(By.LINK_TEXT, self.league).click()
+        check_alls = self.driver.find_elements(By.CSS_SELECTOR, ".divLeagueContainer > a")
+        for button in check_alls:
+            if button.text == "Check All":
+                button.click()
+                time.sleep(.5)
         self.driver.find_element(By.ID, "continue-2").click()
 
     def retrieveData(self):
         html = self.driver.page_source
-        self.driver.quit()
+        # self.driver.quit()
         soup = BeautifulSoup(html, "html.parser")
         self.teams_html = soup.find_all(class_='text-black')
         self.spreads_html = soup.find_all(class_='btn btn-danger')
@@ -82,15 +86,12 @@ class SportDynamic:
         df = df.fillna('')
         return df
 
-'''
+
 # Ubet NFL
 NFL = SportDynamic('https://ubet.ag/', 'NFL')
-NFL.launchDriver()
-NFL.enterDriver()
-NFL.navigateDriver()
-NFL.retrieveData()
-NFL.sortData()
-NFL.presentData()
+print(NFL.presentData())
+
+'''
 
 # Ubet CFB
 CFB = SportDynamic('https://ubet.ag/', 'NCAA FOOTBALL')

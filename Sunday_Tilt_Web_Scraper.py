@@ -126,6 +126,6 @@ class SportDynamic:
         return df
 
 
-NFL = SportDynamic('https://www.sundaytilt.com/', 'BASKETBALL', 'NBA ')
-stdfNFL = NFL.presentData()
-print(stdfNFL)
+# NFL = SportDynamic('https://www.sundaytilt.com/', 'BASKETBALL', 'NBA ')
+# stdfNFL = NFL.presentData()
+# print(stdfNFL)
