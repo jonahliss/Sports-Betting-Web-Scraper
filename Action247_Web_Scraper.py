@@ -44,10 +44,9 @@ class SportDynamic:
         self.driver.get(self.url)
 
     def enterDriver(self):
-        self.driver.find_element(By.CSS_SELECTOR, "#ctl00_MainContent_LoginControl1__UserName").send_keys("Lin257")
-        self.driver.find_element(By.CSS_SELECTOR, "#ctl00_MainContent_LoginControl1__Password").send_keys("2873")
-        time.sleep(.5)
-        self.driver.find_element(By.CSS_SELECTOR, "#ctl00_MainContent_LoginControl1_BtnSubmit").click()
+        self.driver.find_element(By.CSS_SELECTOR, ".username_contx").send_keys("ethanfindl")
+        self.driver.find_element(By.CSS_SELECTOR, ".password_contx").send_keys("action247")
+        self.driver.find_element(By.CSS_SELECTOR, ".login_contx").click()
 
     def navigateDriver(self):
         time.sleep(1)
@@ -91,10 +90,10 @@ class SportDynamic:
 
     def presentData(self):
         self.launchDriver()
-        self.enterDriver()
-        self.navigateDriver()
-        self.retrieveData()
-        self.sortData()
+        # self.enterDriver()
+        # self.navigateDriver()
+        # self.retrieveData()
+        # self.sortData()
         df = pd.DataFrame()
         df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
                         pd.DataFrame({'Odds': self.odds_list})], axis=1)
@@ -102,6 +101,6 @@ class SportDynamic:
         return df
 
 
-# Bluecoin All
-# NFL = SportDynamic('http://bluecoin.ag/core/mobile/')
-# print(NFL.presentData())
+# Action247 All
+NFL = SportDynamic('https://action247.ag/')
+print(NFL.presentData())
