@@ -96,12 +96,16 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         df = pd.DataFrame()
-        df = pd.concat([df, pd.DataFrame({'Teams': }), pd.DataFrame({'Spreads': self.spreads_list}),
-                        pd.DataFrame({'Odds': self.odds_list})], axis=1)
+        # TODO make the dictionary parameter dynamic
+        for event in self.allBets['NFL - 1ST HALF']:
+            for item in event:
+                df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
+                                                        'Odds': event[item]['odds'],
+                                                        'Moneyline': event[item]['moneyline']})], axis=0)
         df = df.fillna('')
-        return self.allBets
+        return df
 
-
-# Ubet NFL
-NFL = SportDynamic('https://ubet.ag/', 'NFL')
-print(NFL.presentData())
+#%%
+# # Ubet NFL
+# NFL = SportDynamic('https://ubet.ag/', 'NFL')
+# print(NFL.presentData())
