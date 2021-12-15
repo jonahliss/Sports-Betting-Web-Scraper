@@ -89,47 +89,58 @@ class SportDynamic:
 
 
 # Ubet NFL
-#%%
+# %%
 NFL = SportDynamic('https://ubet.ag/', 'NFL')
 NFL.presentData()
+
+# %%
 allBets = {}
 
 for event in NFL.soup.select('div.line'):
+    eventType = event.select('h4')[0].text
+
+    if not eventType in allBets:
+        allBets[eventType] = []
 
     tempEvent = {}
-    eventName = event.select('h4')[0].text
-    allBets[eventName] = "replace"
+    # gets the name of the event as a html tag
+    eventName = event.select('div > div > h6')[0]
+    tempEvent[eventName.text] = {}
 
-#%%
-print(allBets)
+    # %%
+    # gets the team and spreads of the event
+    bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
+    children = event.find_all('div', class_='row py-4')
+    for child in children[1:-1]:
+        try:
+            teamName = child.find_all('label')[0].text
+        except:
+            teamName = "NaN"
+        try:
+            spread = child.find_all('label')[1].text
+        except:
+            spread = "NaN"
+        try:
+            odds = child.find_all('label')[2].text
+        except:
+            odds = "NaN"
+        try:
+            moneyline = child.find_all('label')[3].text
+        except:
+            moneyline = "NaN"
 
+        bettingData["team"].append(teamName)
+        bettingData["spread"].append(spread)
+        bettingData["odds"].append(odds)
+        bettingData["moneyline"].append(moneyline)
 
-'''
+    # sets the betting data of the temporary event
+    tempEvent[eventName.text] = bettingData
 
-# Ubet CFB
-CFB = SportDynamic('https://ubet.ag/', 'NCAA FOOTBALL')
-CFB.launchDriver()
-CFB.enterDriver()
-CFB.navigateDriver()
-CFB.retrieveData()
-CFB.sortData()
-CFB.presentData()
+    # puts the event into the list of all events
+    allBets[eventType].append(tempEvent)
 
-# Ubet NBA
-NBA = SportDynamic('https://ubet.ag/', 'NBA')
-NBA.launchDriver()
-NBA.enterDriver()
-NBA.navigateDriver()
-NBA.retrieveData()
-NBA.sortData()
-NBA.presentData()
+# %%
+import pprint
 
-# Ubet CBB
-CBB = SportDynamic('https://ubet.ag/', 'NCAA BASKETBALL - MEN')
-CBB.launchDriver()
-CBB.enterDriver()
-CBB.navigateDriver()
-CBB.retrieveData()
-CBB.sortData()
-CBB.presentData()
-'''
+pprint.pprint(allBets)
