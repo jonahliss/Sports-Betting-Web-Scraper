@@ -7,27 +7,6 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
-def appendDataTeams(html_list, new_list):
-    for item in html_list:
-        new_list.append(item.text)
-
-
-def appendDataSpreads(html_list, new_list):
-    i = 0
-    for item in html_list[1:]:
-        if i % 3 == 0:
-            new_list.append(item.text)
-        i += 1
-
-
-def appendDataOdds(html_list, new_list):
-    i = 0
-    for item in html_list[3:]:
-        if i % 3 == 0:
-            new_list.append(item.text)
-        i += 1
-
-
 class SportDynamic:
     def __init__(self, url, league):
         self.url = url
@@ -39,6 +18,7 @@ class SportDynamic:
         self.teams_list = []
         self.spreads_list = []
         self.odds_list = []
+        self.allBets = {}
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -64,83 +44,64 @@ class SportDynamic:
 
     def retrieveData(self):
         html = self.driver.page_source
-        # self.driver.quit()
+        self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
-        self.teams_html = self.soup.find_all(class_='text-black')
-        self.spreads_html = self.soup.find_all(class_='btn btn-danger')
-        self.odds_html = self.soup.find_all(class_='btn btn-danger')
 
-    def sortData(self):
-        appendDataTeams(self.teams_html, self.teams_list)
-        appendDataSpreads(self.spreads_html, self.spreads_list)
-        appendDataOdds(self.odds_html, self.odds_list)
+        for event in self.soup.select('div.line'):
+            eventType = event.select('h4')[0].text
+
+            if not eventType in self.allBets:
+                self.allBets[eventType] = []
+
+            tempEvent = {}
+            # gets the name of the event as a html tag
+            eventName = event.select('div > div > h6')[0]
+            tempEvent[eventName.text] = {}
+
+            # gets the team and spreads of the event
+            bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
+            children = event.find_all('div', class_='row py-4')
+            for child in children[1:-1]:
+                try:
+                    teamName = child.find_all('label')[0].text
+                except:
+                    teamName = "NaN"
+                try:
+                    spread = child.find_all('label')[1].text
+                except:
+                    spread = "NaN"
+                try:
+                    odds = child.find_all('label')[2].text
+                except:
+                    odds = "NaN"
+                try:
+                    moneyline = child.find_all('label')[3].text
+                except:
+                    moneyline = "NaN"
+
+                bettingData["team"].append(teamName)
+                bettingData["spread"].append(spread)
+                bettingData["odds"].append(odds)
+                bettingData["moneyline"].append(moneyline)
+
+            # sets the betting data of the temporary event
+            tempEvent[eventName.text] = bettingData
+
+            # puts the event into the list of all events
+            self.allBets[eventType].append(tempEvent)
 
     def presentData(self):
         self.launchDriver()
         self.enterDriver()
         self.navigateDriver()
         self.retrieveData()
-        self.sortData()
         df = pd.DataFrame()
-        df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
+        df = pd.concat([df, pd.DataFrame({'Teams': }), pd.DataFrame({'Spreads': self.spreads_list}),
                         pd.DataFrame({'Odds': self.odds_list})], axis=1)
         df = df.fillna('')
-        return df
+        return self.allBets
 
 
 # Ubet NFL
-# %%
 NFL = SportDynamic('https://ubet.ag/', 'NFL')
-NFL.presentData()
-
-# %%
-allBets = {}
-
-for event in NFL.soup.select('div.line'):
-    eventType = event.select('h4')[0].text
-
-    if not eventType in allBets:
-        allBets[eventType] = []
-
-    tempEvent = {}
-    # gets the name of the event as a html tag
-    eventName = event.select('div > div > h6')[0]
-    tempEvent[eventName.text] = {}
-
-    # %%
-    # gets the team and spreads of the event
-    bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
-    children = event.find_all('div', class_='row py-4')
-    for child in children[1:-1]:
-        try:
-            teamName = child.find_all('label')[0].text
-        except:
-            teamName = "NaN"
-        try:
-            spread = child.find_all('label')[1].text
-        except:
-            spread = "NaN"
-        try:
-            odds = child.find_all('label')[2].text
-        except:
-            odds = "NaN"
-        try:
-            moneyline = child.find_all('label')[3].text
-        except:
-            moneyline = "NaN"
-
-        bettingData["team"].append(teamName)
-        bettingData["spread"].append(spread)
-        bettingData["odds"].append(odds)
-        bettingData["moneyline"].append(moneyline)
-
-    # sets the betting data of the temporary event
-    tempEvent[eventName.text] = bettingData
-
-    # puts the event into the list of all events
-    allBets[eventType].append(tempEvent)
-
-# %%
-import pprint
-
-pprint.pprint(allBets)
+print(NFL.presentData())
