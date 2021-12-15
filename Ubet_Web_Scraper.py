@@ -31,6 +31,7 @@ def appendDataOdds(html_list, new_list):
 class SportDynamic:
     def __init__(self, url, league):
         self.url = url
+        self.soup = ""
         self.league = league
         self.teams_html = []
         self.spreads_html = []
@@ -57,17 +58,17 @@ class SportDynamic:
         check_alls = self.driver.find_elements(By.CSS_SELECTOR, ".divLeagueContainer > a")
         for button in check_alls:
             if button.text == "Check All":
+                time.sleep(.1)
                 button.click()
-                time.sleep(.5)
         self.driver.find_element(By.ID, "continue-2").click()
 
     def retrieveData(self):
         html = self.driver.page_source
         # self.driver.quit()
-        soup = BeautifulSoup(html, "html.parser")
-        self.teams_html = soup.find_all(class_='text-black')
-        self.spreads_html = soup.find_all(class_='btn btn-danger')
-        self.odds_html = soup.find_all(class_='btn btn-danger')
+        self.soup = BeautifulSoup(html, "html.parser")
+        self.teams_html = self.soup.find_all(class_='text-black')
+        self.spreads_html = self.soup.find_all(class_='btn btn-danger')
+        self.odds_html = self.soup.find_all(class_='btn btn-danger')
 
     def sortData(self):
         appendDataTeams(self.teams_html, self.teams_list)
@@ -88,8 +89,20 @@ class SportDynamic:
 
 
 # Ubet NFL
+#%%
 NFL = SportDynamic('https://ubet.ag/', 'NFL')
-print(NFL.presentData())
+NFL.presentData()
+allBets = {}
+
+for event in NFL.soup.select('div.line'):
+
+    tempEvent = {}
+    eventName = event.select('h4')[0].text
+    allBets[eventName] = "replace"
+
+#%%
+print(allBets)
+
 
 '''
 
