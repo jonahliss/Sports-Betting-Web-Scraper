@@ -41,18 +41,13 @@ class SportDynamic:
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_FOOTBALL'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEFOOTBALL'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_BASKETBALL'))
-        index = 0
         for button in leagues:
             button = button.find_element(By.CSS_SELECTOR, '.divLeagueContainer > a')
             if button.text == "Check All":
-                print(button.text)
                 button.click()
             if button.text == "Check All":
-                print(button.text)
                 button.click()
 
-            print("______________________________")
-            index += 1
         self.driver.find_element(By.ID, "continue-2").click()
 
     def retrieveData(self):

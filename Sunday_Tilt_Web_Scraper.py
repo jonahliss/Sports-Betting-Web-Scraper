@@ -7,48 +7,11 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
-def appendDataTeams(html_list, new_list):
-    for item in html_list:
-        team = item.text.split('\n')
-        try:
-            new_list.append(team[1])
-        except:
-            break
-
-
-def appendDataSpreads(html_list, new_list):
-    i = 0
-    for item in html_list:
-        if i % 2 == 0:
-            array = item.text.split('\n')
-            new_list.append(array[2])
-        i += 1
-
-
-def appendDataOdds(html_list, new_list):
-    for item in html_list:
-        array = item.text.split('\n')
-        if len(array) == 3:
-            new_list.append(array[1])
-
-
 class SportDynamic:
-    def __init__(self, url, sport, league):
+    def __init__(self, url):
         self.url = url
-        self.sport = sport
-        # TODO fix the static list positioning to be dynamic
-        if league == "NCAAF":
-            self.league = 16
-        elif league == "NCAAB":
-            self.league = 9
-        else:
-            self.league = 1
-        self.teams_html = []
-        self.spreads_html = []
-        self.odds_html = []
-        self.teams_list = []
-        self.spreads_list = []
-        self.odds_list = []
+        self.soup = ""
+        self.allBets = {}
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -81,7 +44,7 @@ class SportDynamic:
             try:
                 if checkbox.get_attribute("data-sub-event") != None:
                     checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
-                    time.sleep(1)
+                    time.sleep(.5)
                     nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
                                                              "div[data-field='link-parent'] > div > ul > li")
                     for nested in nested_checkbox:
@@ -92,7 +55,7 @@ class SportDynamic:
                 pass
         for checkbox in enter_nba:
             try:
-                temp = checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+                checkbox.find_element(By.CSS_SELECTOR, 'div').click()
             except:
                 pass
         # self.driver.find_element(By.CSS_SELECTOR, "#{} > div > ul > li > a".format(self.sport)).click()
@@ -103,29 +66,62 @@ class SportDynamic:
     def retrieveData(self):
         time.sleep(4)
         html = self.driver.page_source
-        soup = BeautifulSoup(html, "html.parser")
-        self.teams_html = soup.find_all(class_='team')
-        self.spreads_html = soup.find_all(class_='line-play buy-skin')
-        self.odds_html = soup.find_all(class_='line-play')
-
-    def sortData(self):
-        appendDataTeams(self.teams_html, self.teams_list)
-        appendDataSpreads(self.spreads_html, self.spreads_list)
-        appendDataOdds(self.odds_html, self.odds_list)
+        self.soup = BeautifulSoup(html, "html.parser")
+        prevEvent = None
+        for event in self.soup.select('div.page-lines'):
+            print("Chris")
+            print(event.get('data-group-line'))
+            # if the data-group-attribute is different than the previous
+            # event, then create a new eventType in the dictionary
+            # if prevEvent.get('data-group-line', "") != event.get('data-group-line'):
+            #     self.allBets[event.get('data-group-attribute')] = []
+            # eventType = event.select()
+            # prevEvent = event
+        # print(self.soup)
 
     def presentData(self):
         self.launchDriver()
         self.enterDriver()
         self.navigateDriver()
         self.retrieveData()
-        self.sortData()
         df = pd.DataFrame()
         df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
                         pd.DataFrame({'Odds': self.odds_list})], axis=1)
         df = df.fillna('')
-        return df
+        # return df
 
+#%%
+NFL = SportDynamic('https://www.sundaytilt.com/')
 
-NFL = SportDynamic('https://www.sundaytilt.com/', 'BASKETBALL', 'NBA ')
-stdfNFL = NFL.presentData()
-print(stdfNFL)
+NFL.launchDriver()
+NFL.enterDriver()
+NFL.navigateDriver()
+
+#%%
+html = NFL.driver.page_source
+NFL.soup = BeautifulSoup(html, "html.parser")
+
+#%%
+attr = ""
+for event in NFL.soup.select('div.page-lines > div')[:-2]:
+    # try to set attr to the attribute of the event
+    # prevAttr will represent the previous attribute
+    try:
+        prevAttr = attr
+        attr = event['data-group-line']
+    # if no attribute of event is found, then
+    # set attr to empty string
+    except:
+        attr = ""
+        prevAttr = attr
+    # if the data-group-attribute is different than the previous
+    # event, then create a new list eventType in the dictionary,
+    # which will hold dicts of micro betting events
+    print(event.has_attr('class'))
+    if attr != "":
+        if prevAttr != attr or (not event.has_attr('class')):
+            eventType = event.select('div.header-a > div > span')[0].text
+            # print(eventType)
+            # print("|||||||||||||||||||||||||||||||||||||")
+        # NFL.allBets[attr] = []
+# print(NFL.allBets)
