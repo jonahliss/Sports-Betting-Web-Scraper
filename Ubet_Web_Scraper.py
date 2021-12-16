@@ -35,11 +35,24 @@ class SportDynamic:
 
     def navigateDriver(self):
         self.driver.find_element(By.ID, "ctl00_lnkSports").click()
-        check_alls = self.driver.find_elements(By.CSS_SELECTOR, ".divLeagueContainer > a")
-        for button in check_alls:
+        leagues = []
+        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_IN-HOUSELIVEWAGERING'))
+        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEBASKETBALL'))
+        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_FOOTBALL'))
+        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEFOOTBALL'))
+        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_BASKETBALL'))
+        index = 0
+        for button in leagues:
+            button = button.find_element(By.CSS_SELECTOR, '.divLeagueContainer > a')
             if button.text == "Check All":
-                time.sleep(.1)
+                print(button.text)
                 button.click()
+            if button.text == "Check All":
+                print(button.text)
+                button.click()
+
+            print("______________________________")
+            index += 1
         self.driver.find_element(By.ID, "continue-2").click()
 
     def retrieveData(self):
@@ -100,12 +113,13 @@ class SportDynamic:
         for event in self.allBets['NFL - 1ST HALF']:
             for item in event:
                 df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
-                                                        'Odds': event[item]['odds'],
-                                                        'Moneyline': event[item]['moneyline']})], axis=0)
+                                                  'Odds': event[item]['odds'],
+                                                  'Moneyline': event[item]['moneyline']})], axis=0)
         df = df.fillna('')
         return df
 
-#%%
+
+# %%
 # # Ubet NFL
-# NFL = SportDynamic('https://ubet.ag/', 'NFL')
-# print(NFL.presentData())
+NFL = SportDynamic('https://ubet.ag/', 'NFL')
+print(NFL.presentData())
