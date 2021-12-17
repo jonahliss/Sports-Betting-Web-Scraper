@@ -67,17 +67,59 @@ class SportDynamic:
         time.sleep(4)
         html = self.driver.page_source
         self.soup = BeautifulSoup(html, "html.parser")
-        prevEvent = None
-        for event in self.soup.select('div.page-lines'):
-            print("Chris")
-            print(event.get('data-group-line'))
-            # if the data-group-attribute is different than the previous
-            # event, then create a new eventType in the dictionary
-            # if prevEvent.get('data-group-line', "") != event.get('data-group-line'):
-            #     self.allBets[event.get('data-group-attribute')] = []
-            # eventType = event.select()
-            # prevEvent = event
-        # print(self.soup)
+        for event in self.soup.select('div.page-lines > div')[:-2]:
+            # tries to find the "header-a" tags that hold the event types
+            try:
+                eventType = event.find(class_='header-a').div.span.text
+                # creates a new list eventType in the allBets dictionary, which will hold
+                # dicts of the micro betting events
+                self.allBets[eventType] = []
+            # if no attribute of event is found, then
+            # set attr to empty string
+            except:
+                pass
+            # create a temporary dictionary to hold the event
+            tempEvent = {}
+            try:
+                eventName = event.find(class_='header-d').select('div > span')[2].text
+            except:
+                eventName = 'null event name'
+            # gets the team and spreads of the event
+            bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
+
+            # gets the name of the event as a html tag
+            teams = event.select('div.lines > div')
+            for team in teams:
+                data = team.find_all('div', recursive=False)
+                try:
+                    teamName = data[0].select('div.team > span')[0].text
+                except:
+                    teamName = "NaN"
+                try:
+                    spread = data[1].select('div > span')[0].text
+                except:
+                    spread = "NaN"
+                try:
+                    odds = data[3].select('div > span')[0].text
+                except:
+                    odds = "NaN"
+                try:
+                    moneyline = data[2].select('div > span')[0].text
+                except:
+                    moneyline = "NaN"
+
+                bettingData["team"].append(teamName)
+                bettingData["spread"].append(spread)
+                bettingData["odds"].append(odds)
+                bettingData["moneyline"].append(moneyline)
+
+            # create unique key for the event
+            eventName = eventName + ": " + teamName
+
+            # sets the betting data of the temporary event
+            tempEvent[eventName] = bettingData
+            # append onto the list of events, the dict of the micro betting events
+            self.allBets[eventType].append(tempEvent)
 
     def presentData(self):
         self.launchDriver()
@@ -85,43 +127,15 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         df = pd.DataFrame()
-        df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
-                        pd.DataFrame({'Odds': self.odds_list})], axis=1)
+        for event in self.allBets['NFL - 1ST HALF']:
+            for item in event:
+                df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
+                                                  'Odds': event[item]['odds'],
+                                                  'Moneyline': event[item]['moneyline']})], axis=0)
         df = df.fillna('')
-        # return df
+        return df
 
-#%%
+
+# %%
 NFL = SportDynamic('https://www.sundaytilt.com/')
-
-NFL.launchDriver()
-NFL.enterDriver()
-NFL.navigateDriver()
-
-#%%
-html = NFL.driver.page_source
-NFL.soup = BeautifulSoup(html, "html.parser")
-
-#%%
-attr = ""
-for event in NFL.soup.select('div.page-lines > div')[:-2]:
-    # try to set attr to the attribute of the event
-    # prevAttr will represent the previous attribute
-    try:
-        prevAttr = attr
-        attr = event['data-group-line']
-    # if no attribute of event is found, then
-    # set attr to empty string
-    except:
-        attr = ""
-        prevAttr = attr
-    # if the data-group-attribute is different than the previous
-    # event, then create a new list eventType in the dictionary,
-    # which will hold dicts of micro betting events
-    print(event.has_attr('class'))
-    if attr != "":
-        if prevAttr != attr or (not event.has_attr('class')):
-            eventType = event.select('div.header-a > div > span')[0].text
-            # print(eventType)
-            # print("|||||||||||||||||||||||||||||||||||||")
-        # NFL.allBets[attr] = []
-# print(NFL.allBets)
+NFL.presentData()
