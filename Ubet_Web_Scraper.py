@@ -8,10 +8,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 class SportDynamic:
-    def __init__(self, url, league):
+    def __init__(self, url):
         self.url = url
         self.soup = ""
-        self.league = league
         self.teams_html = []
         self.spreads_html = []
         self.odds_html = []
@@ -54,7 +53,8 @@ class SportDynamic:
         html = self.driver.page_source
         self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
-
+        
+    def sortData(self):
         for event in self.soup.select('div.line'):
             eventType = event.select('h4')[0].text
 
@@ -97,15 +97,11 @@ class SportDynamic:
 
             # puts the event into the list of all events
             self.allBets[eventType].append(tempEvent)
-
-    def presentData(self):
-        self.launchDriver()
-        self.enterDriver()
-        self.navigateDriver()
-        self.retrieveData()
+            
+    def displayData(self, sport):
         df = pd.DataFrame()
         # TODO make the dictionary parameter dynamic
-        for event in self.allBets['NFL - 1ST HALF']:
+        for event in self.allBets[sport]:
             for item in event:
                 df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
                                                   'Odds': event[item]['odds'],
@@ -113,8 +109,18 @@ class SportDynamic:
         df = df.fillna('')
         return df
 
+    def presentData(self):
+        self.launchDriver()
+        self.enterDriver()
+        self.navigateDriver()
+        self.retrieveData()
+        self.displayData()
+        
+obj = SportDynamic('https://ubet.ag/')
+obj.launchDriver()
+obj.enterDriver()
+obj.navigateDriver()
+obj.retrieveData()
+obj.sortData()
 
-# %%
-# # Ubet NFL
-NFL = SportDynamic('https://ubet.ag/', 'NFL')
-print(NFL.presentData())
+obj.displayData('NFL - AFC CHAMPIONSHIP CONFERENCE ODDS')
