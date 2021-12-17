@@ -109,18 +109,14 @@ class SportDynamic:
         df = df.fillna('')
         return df
 
-    def presentData(self):
+    def collectData(self):
         self.launchDriver()
         self.enterDriver()
         self.navigateDriver()
         self.retrieveData()
-        self.displayData()
+        self.sortData()
         
 obj = SportDynamic('https://ubet.ag/')
-obj.launchDriver()
-obj.enterDriver()
-obj.navigateDriver()
-obj.retrieveData()
-obj.sortData()
+obj.collectData()
 
 obj.displayData('NFL - AFC CHAMPIONSHIP CONFERENCE ODDS')
