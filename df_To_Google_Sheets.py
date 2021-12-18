@@ -5,6 +5,7 @@ import Draft_Kings_Web_Scraper as dkweb
 import Sunday_Tilt_Web_Scraper as stweb
 import Ubet_Web_Scraper as ubweb
 import Wager_Wizard_Web_Scraper as wwweb
+import Purewage_Web_Scraper as pwweb
 
 # %%
 # authorize user to connect to google sheet
@@ -32,6 +33,8 @@ while True:
     draftkings_classes = ['sportsbook-outcome-cell__line', 'sportsbook-odds american default-color',
                           'event-cell__name-text']
 
+
+    # TODO create one object for each website, and call the collect_data function for each sport in each object
     # grab NFL worksheet
     worksheetNFL.clear()
 
@@ -39,13 +42,23 @@ while True:
     df = NFL.presentData()
     worksheetNFL.update([df.columns.values.tolist()] + df.values.tolist())
 
-    NFL = stweb.SportDynamic('https://www.sundaytilt.com/')
-    stdfNFL = NFL.presentData()
+    website1 = stweb.SportDynamic('https://www.sundaytilt.com/')
+    website1.collectData()
+    stdfNFL = website1.displayData('NFL')
     worksheetNFL.update('D1:', [stdfNFL.columns.values.tolist()] + stdfNFL.values.tolist())
+    stdfNBA = website1.displayData('NBA')
+    worksheetNFL.update('D1:', [stdfNBA.columns.values.tolist()] + stdfNBA.values.tolist())
 
-    NFL = ubweb.SportDynamic('https://ubet.ag/')
+    website2 = ubweb.SportDynamic('https://ubet.ag/')
+    website2.collectData()
+    ubdfNFL = website2.displayData('NFL')
+    worksheetNFL.update('F:H', [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+    ubdfNBA = website2.displayData('NBA')
+    worksheetNBA.update('F:H', [ubdfNBA.columns.values.tolist()] + ubdfNBA.values.tolist())
+
+    NFL = pwweb.SportDynamic('https://ubet.ag/')
     NFL.collectData()
-    ubdfNFL = NFL.displayData()
+    ubdfNFL = NFL.displayData('NFL')
     worksheetNFL.update('F:H', [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
 
     # NFL = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"11,1\",this)\'")
@@ -77,14 +90,6 @@ while True:
     NBA = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846")
     dfNBA = NBA.presentData()
     worksheetNBA.update('A:C', [dfNBA.columns.values.tolist()] + dfNBA.values.tolist())
-
-    # NBA = stweb.SportDynamic('https://www.sundaytilt.com/', 'basketball', 'NBA ')
-    # stdfNBA = NBA.presentData()
-    # worksheetNBA.update('D:F', [stdfNBA.columns.values.tolist()] + stdfNBA.values.tolist())
-
-    NBA = ubweb.SportDynamic('https://ubet.ag/', 'NBA')
-    ubdfNBA = NBA.presentData()
-    worksheetNBA.update('F:H', [ubdfNBA.columns.values.tolist()] + ubdfNBA.values.tolist())
 
     # NBA = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"9,1\",this)\'")
     # wwdfNBA = NBA.presentData()

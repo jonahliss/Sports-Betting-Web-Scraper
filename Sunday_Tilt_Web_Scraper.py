@@ -67,6 +67,8 @@ class SportDynamic:
         time.sleep(4)
         html = self.driver.page_source
         self.soup = BeautifulSoup(html, "html.parser")
+
+    def sortData(self):
         for event in self.soup.select('div.page-lines > div')[:-2]:
             # tries to find the "header-a" tags that hold the event types
             try:
@@ -121,13 +123,9 @@ class SportDynamic:
             # append onto the list of events, the dict of the micro betting events
             self.allBets[eventType].append(tempEvent)
 
-    def presentData(self):
-        self.launchDriver()
-        self.enterDriver()
-        self.navigateDriver()
-        self.retrieveData()
+    def displayData(self, sport):
         df = pd.DataFrame()
-        for event in self.allBets['NFL - 1ST HALF']:
+        for event in self.allBets[sport]:
             for item in event:
                 df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
                                                   'Odds': event[item]['odds'],
@@ -135,7 +133,13 @@ class SportDynamic:
         df = df.fillna('')
         return df
 
+    def collectData(self):
+        self.launchDriver()
+        self.enterDriver()
+        self.navigateDriver()
+        self.retrieveData()
+        self.sortData()
 
 # %%
-NFL = SportDynamic('https://www.sundaytilt.com/')
-NFL.presentData()
+# NFL = SportDynamic('https://www.sundaytilt.com/')
+# NFL.presentData()

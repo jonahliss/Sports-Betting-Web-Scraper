@@ -11,12 +11,6 @@ class SportDynamic:
     def __init__(self, url):
         self.url = url
         self.soup = ""
-        self.teams_html = []
-        self.spreads_html = []
-        self.odds_html = []
-        self.teams_list = []
-        self.spreads_list = []
-        self.odds_list = []
         self.allBets = {}
 
     def launchDriver(self):
@@ -116,7 +110,7 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
         
-obj = SportDynamic('https://ubet.ag/')
-obj.collectData()
-
-obj.displayData('NFL - AFC CHAMPIONSHIP CONFERENCE ODDS')
+# obj = SportDynamic('https://ubet.ag/')
+# obj.collectData()
+#
+# obj.displayData('NFL - AFC CHAMPIONSHIP CONFERENCE ODDS')

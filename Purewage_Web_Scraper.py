@@ -12,6 +12,7 @@ class SportDynamic:
     def __init__(self, url):
         self.url = url
         self.allBets = {}
+        self.soup = ""
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -44,10 +45,12 @@ class SportDynamic:
 
     def retrieveData(self):
         # TODO fix bs scraper
-        # self.driver.quit()
+        self.driver.quit()
         html = self.driver.page_source
-        soup = BeautifulSoup(html, "html.parser")
-        for event in soup.find_all(class_='panel panel-transparent'):
+        self.soup = BeautifulSoup(html, "html.parser")
+
+    def sortData(self):
+        for event in self.soup.find_all(class_='panel panel-transparent'):
             try:
                 eventType = event.find(class_='panel-title linesPanelTitle').text
                 # TODO fix the string new line chraracters
@@ -114,14 +117,9 @@ class SportDynamic:
             # append onto the list of events, the dict of the micro betting events
             self.allBets[eventType].append(tempEvent)
 
-
-    def presentData(self):
-        self.launchDriver()
-        self.enterDriver()
-        self.navigateDriver()
-        self.retrieveData()
+    def displayData(self, sport):
         df = pd.DataFrame()
-        for event in self.allBets['NFL']:
+        for event in self.allBets[sport]:
             for item in event:
                 df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
                                                   'Odds': event[item]['odds'],
@@ -129,8 +127,13 @@ class SportDynamic:
         df = df.fillna('')
         return df
 
+    def collectData(self):
+        self.launchDriver()
+        self.enterDriver()
+        self.navigateDriver()
+        self.retrieveData()
+        self.sortData()
+
 
 # Purewage All
-NFL = SportDynamic('https://www.purewage.com/')
-
-
+# NFL = SportDynamic('https://www.purewage.com/')

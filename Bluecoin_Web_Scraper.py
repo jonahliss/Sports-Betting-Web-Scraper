@@ -172,5 +172,5 @@ class SportDynamic:
 
 #%%
 # Bluecoin All
-NFL = SportDynamic('http://bluecoin.ag/core/mobile/')
-print(NFL.presentData())
+# NFL = SportDynamic('http://bluecoin.ag/core/mobile/')
+# print(NFL.presentData())
