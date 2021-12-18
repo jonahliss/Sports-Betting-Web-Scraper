@@ -1,3 +1,4 @@
+import codecs
 import time
 import requests
 import pandas as pd
@@ -7,33 +8,10 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
-def appendDataTeams(html_list, new_list):
-    for item in html_list:
-        new_list.append(item.text)
-
-
-def appendDataSpreads(html_list, new_list):
-    for item in html_list:
-        new_list.append(item.text.strip())
-
-
-def appendDataOdds(html_list, new_list):
-    i = 0
-    for item in html_list:
-        if i % 3 == 0:
-            new_list.append(item.text)
-        i += 1
-
-
 class SportDynamic:
     def __init__(self, url):
+        self.allBets = {}
         self.url = url
-        self.teams_html = []
-        self.spreads_html = []
-        self.odds_html = []
-        self.teams_list = []
-        self.spreads_list = []
-        self.odds_list = []
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -50,11 +28,12 @@ class SportDynamic:
         self.driver.find_element(By.CSS_SELECTOR, "#ctl00_MainContent_LoginControl1_BtnSubmit").click()
 
     def navigateDriver(self):
+        # TODO change the selenium to only select relevant sports
         time.sleep(1)
         self.driver.find_element(By.CSS_SELECTOR, "#ctl00_WagerLnk_lnkSports").click()
         time.sleep(1)
         self.driver.find_element(By.CSS_SELECTOR, "#WT35").click()
-        time.sleep(1)
+        time.sleep(2)
         menus = self.driver.find_elements(By.CSS_SELECTOR, "table[class='sp_hdr'] > tbody > tr > th > table > tbody > "
                                                            "tr > td > a")
         # open up all the menus
@@ -76,32 +55,122 @@ class SportDynamic:
         self.driver.find_element(By.CSS_SELECTOR, ".contButtTd > a").click()
 
     def retrieveData(self):
-        # TODO fix bs scraper
         html = self.driver.page_source
-        self.driver.quit()
+        # self.driver.quit()
         soup = BeautifulSoup(html, "html.parser")
-        self.teams_html = soup.find_all(class_='team_name')
-        self.spreads_html = soup.find_all(class_='cboOdds cboLines')
-        self.odds_html = soup.find_all(class_='RadComboBoxItem')
+        for event in soup.select('table > tbody')[1:41]:
+            # try to find the event type in the first td element of the table
+            try:
+                eventType = event.find('td').text
+                self.allBets[eventType] = []
+            except:
+                pass
 
-    def sortData(self):
-        appendDataTeams(self.teams_html, self.teams_list)
-        appendDataSpreads(self.spreads_html, self.spreads_list)
-        appendDataOdds(self.odds_html, self.odds_list)
+            # create a temporary dictionary to hold the event
+            tempEvent = {}
+
+            # select all the table rows we want by class
+            tableRows = event.select('tr.TrGameOdd')
+            for temp in event.select('tr.TrGameEven'):
+                tableRows.append(temp)
+            # include the futures rows?
+            tableFutureRows = event.select('tr.TrTntDetail')
+
+            # variables to help identify new team matchups
+            prevID = -1
+            isNew = True
+            if len(tableRows) > 1:
+                for row in tableRows:
+                    cols = row.select('td')
+                    # gets the eventID
+                    try:
+                        eventID = cols[2].text
+                    except:
+                        # if eventID not found, it is not a valid event
+                        continue
+                    try:
+                        teamName = cols[3].text
+                    except:
+                        teamName = "NaN"
+                    try:
+                        spread = cols[4].text
+                    except:
+                        spread = "NaN"
+                    try:
+                        odds = cols[5].text
+                    except:
+                        odds = "NaN"
+                    try:
+                        moneyline = cols[6].text
+                    except:
+                        moneyline = "NaN"
+
+                    # if the eventID is "new", create new eventName, and reset the bettingData
+                    if int(eventID) - 1 != prevID and isNew:
+                        bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
+                        eventName = str(eventID) + ": " + teamName
+                        isNew = False
+                        prevID = eventID
+                        bettingData["team"].append(teamName)
+                        bettingData["spread"].append(spread)
+                        bettingData["odds"].append(odds)
+                        bettingData["moneyline"].append(moneyline)
+                    # eventID has already been reached, so append the data onto list of all events
+                    else:
+                        isNew = True
+                        bettingData["team"].append(teamName)
+                        bettingData["spread"].append(spread)
+                        bettingData["odds"].append(odds)
+                        bettingData["moneyline"].append(moneyline)
+                        tempEvent[eventName] = bettingData
+                # append onto the list of events, the dict of the micro betting events
+                self.allBets[eventType].append(tempEvent)
+
+            else:  # iterate through the futures
+                for row in tableFutureRows:
+                    cols = row.select('td')
+                    bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
+                    eventName = cols[4].text
+                    try:
+                        teamName = cols[4].text
+                    except:
+                        teamName = "NaN"
+                    try:
+                        spread = cols[6].text
+                    except:
+                        spread = "NaN"
+                    try:
+                        odds = cols[7].text
+                    except:
+                        odds = "NaN"
+                    try:
+                        moneyline = cols[5].text
+                    except:
+                        moneyline = "NaN"
+
+                    bettingData["team"].append(teamName)
+                    bettingData["spread"].append(spread)
+                    bettingData["odds"].append(odds)
+                    bettingData["moneyline"].append(moneyline)
+                    tempEvent[eventName] = bettingData
+                    # append onto the list of events, the dict of the micro betting events
+                    self.allBets[eventType].append(tempEvent)
 
     def presentData(self):
         self.launchDriver()
         self.enterDriver()
         self.navigateDriver()
         self.retrieveData()
-        self.sortData()
         df = pd.DataFrame()
-        df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
-                        pd.DataFrame({'Odds': self.odds_list})], axis=1)
+        for event in self.allBets['NFL']:
+            for item in event:
+                df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
+                                                  'Odds': event[item]['odds'],
+                                                  'Moneyline': event[item]['moneyline']})], axis=0)
         df = df.fillna('')
         return df
 
-
+#%%
 # Bluecoin All
-# NFL = SportDynamic('http://bluecoin.ag/core/mobile/')
-# print(NFL.presentData())
+NFL = SportDynamic('http://bluecoin.ag/core/mobile/')
+print(NFL.presentData())

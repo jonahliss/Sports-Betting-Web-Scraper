@@ -1,3 +1,4 @@
+import codecs
 import time
 import requests
 import pandas as pd
@@ -7,33 +8,10 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
-def appendDataTeams(html_list, new_list):
-    for item in html_list:
-        new_list.append(item.text)
-
-
-def appendDataSpreads(html_list, new_list):
-    for item in html_list:
-        new_list.append(item.text.strip())
-
-
-def appendDataOdds(html_list, new_list):
-    i = 0
-    for item in html_list:
-        if i % 3 == 0:
-            new_list.append(item.text)
-        i += 1
-
-
 class SportDynamic:
     def __init__(self, url):
         self.url = url
-        self.teams_html = []
-        self.spreads_html = []
-        self.odds_html = []
-        self.teams_list = []
-        self.spreads_list = []
-        self.odds_list = []
+        self.allBets = {}
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -53,7 +31,7 @@ class SportDynamic:
         # list of all elements of sport categories
         sports = self.driver.find_elements(By.CSS_SELECTOR, "#sportSide > li")
         for sport in sports:
-            if sport.text != "SPORTS":
+            if sport.text != "SPORTS" and ("basketball" in sport.text.lower() or "football" in sport.text.lower()):
                 sport.find_element(By.CSS_SELECTOR, "a").click()
                 time.sleep(.2)
                 subsports = sport.find_elements(By.CSS_SELECTOR, "ul > li")
@@ -66,31 +44,93 @@ class SportDynamic:
 
     def retrieveData(self):
         # TODO fix bs scraper
+        # self.driver.quit()
         html = self.driver.page_source
-        self.driver.quit()
         soup = BeautifulSoup(html, "html.parser")
-        self.teams_html = soup.find_all(class_='team_name')
-        self.spreads_html = soup.find_all(class_='cboOdds cboLines')
-        self.odds_html = soup.find_all(class_='RadComboBoxItem')
+        for event in soup.find_all(class_='panel panel-transparent'):
+            try:
+                eventType = event.find(class_='panel-title linesPanelTitle').text
+                # TODO fix the string new line chraracters
+                eventType.strip()
+                # creates a new list eventType in the allBets dictionary, which will hold
+                # dicts of the micro betting events
+                self.allBets[eventType] = []
+            # if no attribute of event is found, then
+            # set attr to empty string
+            except:
+                pass
 
-    def sortData(self):
-        appendDataTeams(self.teams_html, self.teams_list)
-        appendDataSpreads(self.spreads_html, self.spreads_list)
-        appendDataOdds(self.odds_html, self.odds_list)
+            # create a temporary dictionary to hold the event
+            tempEvent = {}
+            panelRows = event.find(class_='panel-body').select('div.row')
+
+            # variables to help identify new team matchups
+            prevID = -1
+            isNew = True
+            # TODO fix for futures, not just h2h matchups
+            for row in panelRows:
+                # gets the eventID
+                try:
+                    eventID = row.find(class_='linesRot').text
+                except:
+                    # if eventID not found, it is not a valid event
+                    continue
+                try:
+                    teamName = row.find(class_='linesTeam').select('span')[1].next
+                except:
+                    teamName = "NaN"
+                try:
+                    spread = row.find(class_='linesSpread').find('a').text
+                except:
+                    spread = "NaN"
+                try:
+                    odds = row.find(class_='linesMl').find('a').text
+                except:
+                    odds = "NaN"
+                try:
+                    moneyline = row.find(class_='linesTotal').find('a').text
+                except:
+                    moneyline = "NaN"
+
+                # if the eventID is "new", create new eventName, and reset the bettingData
+                if int(eventID) - 1 != prevID and isNew:
+                    bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
+                    eventName = str(eventID) + ": " + teamName
+                    isNew = False
+                    prevID = eventID
+                    bettingData["team"].append(teamName)
+                    bettingData["spread"].append(spread)
+                    bettingData["odds"].append(odds)
+                    bettingData["moneyline"].append(moneyline)
+                # eventID has already been reached, so append the data onto list of all events
+                else:
+                    isNew = True
+                    bettingData["team"].append(teamName)
+                    bettingData["spread"].append(spread)
+                    bettingData["odds"].append(odds)
+                    bettingData["moneyline"].append(moneyline)
+                    tempEvent[eventName] = bettingData
+
+            # append onto the list of events, the dict of the micro betting events
+            self.allBets[eventType].append(tempEvent)
+
 
     def presentData(self):
         self.launchDriver()
         self.enterDriver()
         self.navigateDriver()
         self.retrieveData()
-        self.sortData()
         df = pd.DataFrame()
-        df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
-                        pd.DataFrame({'Odds': self.odds_list})], axis=1)
+        for event in self.allBets['NFL']:
+            for item in event:
+                df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
+                                                  'Odds': event[item]['odds'],
+                                                  'Moneyline': event[item]['moneyline']})], axis=0)
         df = df.fillna('')
         return df
 
 
 # Purewage All
 NFL = SportDynamic('https://www.purewage.com/')
-print(NFL.presentData())
+
+
