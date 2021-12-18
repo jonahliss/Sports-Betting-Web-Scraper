@@ -3,73 +3,70 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 
-def appendDataGeneral(html_list, new_list, iterative):
-    i = iterative
-    for item in html_list:
-        if i % 3 == 0:
-            new_list.append(item.text)
-        i += 1
-        
-
-def appendDataTeams(html_list, new_list):
-    for item in html_list:
-        new_list.append(item.text)
-        
-
 class SportStatic:
     def __init__(self, URL):
         self.url = URL
-        self.spreads_html = []
-        self.odds_html = []
-        self.moneylines_html = []
-        self.teams_html = []
-        self.spreads = []
-        self.odds = []
-        self.moneylines = []
-        self.teams = []
+        self.teams_list = []
+        self.spreads_list = []
+        self.odds_list = []
+        self.moneylines_list = []
         self.df = []
 
     def retrieveData(self):
         page = requests.get(self.url)
         self.soup = BeautifulSoup(page.content, "html.parser")
-        self.data_html = self.soup.find_all(class_='sportsbook-outcome-body-wrapper')
-        self.teams_html = self.soup.find_all(class_='event-cell__name-text')
 
     def sortData(self):
-        appendDataGeneral(self.data_html, self.spreads, 0)
-        appendDataGeneral(self.data_html, self.odds, 2)
-        appendDataGeneral(self.data_html, self.moneylines, 1)
-        appendDataTeams(self.teams_html, self.teams)
+        for event in self.soup.select('div.parlay-card-10-a'):
+            children = event.find_all('tr')
+            for child in children[1:]:
+                try:
+                    team = child.find_all(class_='event-cell__name-text')[0].text
+                except:
+                    team = "NaN"
+                try:
+                    spread = child.find_all(class_='sportsbook-outcome-body-wrapper')[0].text
+                except:
+                    spread = "NaN"
+                try:
+                    odds = child.find_all(class_='sportsbook-outcome-body-wrapper')[1].text
+                except:
+                    odds = "NaN"
+                try:
+                    moneyline = child.find_all(class_='sportsbook-outcome-body-wrapper')[2].text
+                except:
+                    moneyline = "NaN"
+
+                self.teams_list.append(team)
+                self.spreads_list.append(spread)
+                self.odds_list.append(odds)
+                self.moneylines_list.append(moneyline)
 
     def displayData(self):
         self.retrieveData()
         self.sortData()
         self.df = pd.DataFrame()
-        self.df = pd.concat([self.df, pd.DataFrame({'Team': self.teams}), pd.DataFrame({'Spread': self.spreads}),
-                             pd.DataFrame({'Odds': self.odds}), pd.DataFrame({'Moneyline': self.moneylines})], axis=1)
+        self.df = pd.concat([self.df, pd.DataFrame({'Team': self.teams_list}), pd.DataFrame({'Spread': self.spreads_list}),
+                             pd.DataFrame({'Odds': self.odds_list}), pd.DataFrame({'Moneyline': self.moneylines_list})], axis=1)
         self.df = self.df.fillna('')
         return self.df
     
-    def presentData(self):
+    def collectData(self):
         self.retrieveData()
         self.sortData()
-        self.displayData()
-
-
-'''
-# Draft Kings NFL
-NFL = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846")
-NFL.presentData()
-
-# Draft Kings CFB
+        
+ 
+NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561")
 CFB = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775")
-CFB.presentData()
-
-# Draft Kings NBA
 NBA = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846")
-NBA.presentData()
-
-# Draft Kings CBB
 CBB = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771")
-CBB.presentData()
-'''
+
+while 0 == 0:
+    NFL.collectData()
+    print(NFL.displayData())
+    CFB.collectData()
+    print(CFB.displayData())
+    NBA.collectData()
+    print(NBA.displayData())
+    CBB.collectData()
+    print(CBB.displayData())
