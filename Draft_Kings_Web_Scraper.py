@@ -1,6 +1,13 @@
 import requests
+import gspread
 from bs4 import BeautifulSoup
 import pandas as pd
+
+
+def getRange(index):
+    if index / 26 >= 1:
+        return chr(64 + (index // 26)) + chr(65 + (index % 26))
+    return chr(65 + index)
 
 
 class SportStatic:
@@ -56,20 +63,35 @@ class SportStatic:
         self.sortData()
         
 
+gc = gspread.service_account(filename='credentials.json')
+print("Connected to Google Sheet")
+
+sh = gc.open("BettingScraper")
+worksheet = sh.get_worksheet(3)
+
+
 while 0 == 0:
     
     NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561")
     NFL.collectData()
-    print(NFL.displayData())
+    dfNFL = NFL.displayData()
+    worksheet.update('B:E', [dfNFL.columns.values.tolist()] + dfNFL.values.tolist())
+    print('NFL Updated')
     
     CFB = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775")
     CFB.collectData()
-    print(CFB.displayData())
+    dfCFB = CFB.displayData()
+    worksheet.update('G:J', [dfCFB.columns.values.tolist()] + dfCFB.values.tolist())
+    print('CFB Updated')
     
     NBA = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846")
     NBA.collectData()
-    print(NBA.displayData())
+    dfNBA = NBA.displayData()
+    worksheet.update('L:O', [dfNBA.columns.values.tolist()] + dfNBA.values.tolist())
+    print('NBA Updated')
     
     CBB = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771")
     CBB.collectData()
-    print(CBB.displayData())
+    dfCBB = CBB.displayData()
+    worksheet.update('Q:T', [dfCBB.columns.values.tolist()] + dfCBB.values.tolist())
+    print('CBB Updated')
