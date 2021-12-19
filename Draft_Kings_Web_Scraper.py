@@ -55,18 +55,21 @@ class SportStatic:
         self.retrieveData()
         self.sortData()
         
- 
-NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561")
-CFB = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775")
-NBA = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846")
-CBB = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771")
 
 while 0 == 0:
+    
+    NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561")
     NFL.collectData()
     print(NFL.displayData())
+    
+    CFB = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775")
     CFB.collectData()
     print(CFB.displayData())
+    
+    NBA = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846")
     NBA.collectData()
     print(NBA.displayData())
+    
+    CBB = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771")
     CBB.collectData()
     print(CBB.displayData())
