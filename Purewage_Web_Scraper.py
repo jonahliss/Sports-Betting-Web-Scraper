@@ -136,4 +136,3 @@ class SportDynamic:
 
 
 # Purewage All
-# NFL = SportDynamic('https://www.purewage.com/')

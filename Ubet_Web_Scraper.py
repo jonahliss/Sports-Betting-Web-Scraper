@@ -1,10 +1,17 @@
 import time
 import requests
+import gspread
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+
+
+def getRange(index):
+    if index / 26 >= 1:
+        return chr(64 + (index // 26)) + chr(65 + (index % 26))
+    return chr(65 + index)
 
 
 class SportDynamic:
@@ -47,7 +54,7 @@ class SportDynamic:
         html = self.driver.page_source
         self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
-        
+
     def sortData(self):
         for event in self.soup.select('div.line'):
             eventType = event.select('h4')[0].text
@@ -91,7 +98,7 @@ class SportDynamic:
 
             # puts the event into the list of all events
             self.allBets[eventType].append(tempEvent)
-            
+
     def displayData(self, sport):
         df = pd.DataFrame()
         # TODO make the dictionary parameter dynamic
@@ -109,8 +116,22 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         self.sortData()
-        
-# obj = SportDynamic('https://ubet.ag/')
-# obj.collectData()
-#
-# obj.displayData('NFL - AFC CHAMPIONSHIP CONFERENCE ODDS')
+
+
+gc = gspread.service_account(filename='credentials.json')
+print("Connected to Google Sheet")
+
+sh = gc.open("BettingScraper")
+worksheetNFL = sh.get_worksheet(2)
+worksheetNFL.clear()
+
+website2 = SportDynamic('https://ubet.ag/')
+website2.collectData()
+
+startingIndex = 0
+for key in website2.allBets:
+    print(key)
+    ubdfNFL = website2.displayData(key)
+    worksheetNFL.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
+                        [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+    startingIndex += 4
