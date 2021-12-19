@@ -36,7 +36,7 @@ class SportDynamic:
     def navigateDriver(self):
         self.driver.find_element(By.ID, "ctl00_lnkSports").click()
         leagues = []
-        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_IN-HOUSELIVEWAGERING'))
+        #leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_IN-HOUSELIVEWAGERING'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEBASKETBALL'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_FOOTBALL'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEFOOTBALL'))
@@ -52,7 +52,7 @@ class SportDynamic:
 
     def retrieveData(self):
         html = self.driver.page_source
-        self.driver.quit()
+        #self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
@@ -122,16 +122,26 @@ gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheetNFL = sh.get_worksheet(2)
-worksheetNFL.clear()
+worksheet = sh.get_worksheet(2)
+worksheet.clear()
 
-website2 = SportDynamic('https://ubet.ag/')
-website2.collectData()
+website = SportDynamic('https://ubet.ag/')
+website.collectData()
 
-startingIndex = 0
-for key in website2.allBets:
-    print(key)
-    ubdfNFL = website2.displayData(key)
-    worksheetNFL.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
-                        [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
-    startingIndex += 4
+
+while 0 == 0:
+    
+    print('Starting')
+    
+    startingIndex = 0
+    for key in website.allBets:
+        ubdfNFL = website.displayData(key)
+        worksheet.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
+                            [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+        startingIndex += 4
+        
+    print('Updated')
+    
+    website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
+    
+    time.sleep(30)
