@@ -1,10 +1,16 @@
 import time
-import requests
+import gspread
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+
+
+def getRange(index):
+    if index / 26 >= 1:
+        return chr(64 + (index // 26)) + chr(65 + (index % 26))
+    return chr(65 + index)
 
 
 class SportDynamic:
@@ -58,7 +64,7 @@ class SportDynamic:
                 checkbox.find_element(By.CSS_SELECTOR, 'div').click()
             except:
                 pass
-        # self.driver.find_element(By.CSS_SELECTOR, "#{} > div > ul > li > a".format(self.sport)).click()
+        self.driver.find_element(By.CSS_SELECTOR, "#{} > div > ul > li > a".format(self.sport)).click()
         time.sleep(1)
         # button = self.driver.find_element(By.XPATH, '//span[text()="Continue"]')
         # button.click()
@@ -140,6 +146,33 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
 
+
 # %%
-# NFL = SportDynamic('https://www.sundaytilt.com/')
-# NFL.presentData()
+gc = gspread.service_account(filename='credentials.json')
+print("Connected to Google Sheet")
+
+sh = gc.open("BettingScraper")
+worksheet = sh.get_worksheet(6)
+worksheet.clear()
+
+#%%
+
+website = SportDynamic('https://www.sundaytilt.com/')
+website.collectData()
+
+while True:
+
+    print('Starting')
+
+    startingIndex = 0
+    for key in website.allBets:
+        ubdfNFL = website.displayData(key)
+        worksheet.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
+                         [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+        startingIndex += 4
+
+    print('Updated')
+
+    time.sleep(30)
+
+    website.driver.find_element(By.CSS_SELECTOR, "div[data-wager-type='REFRESH']").click()
