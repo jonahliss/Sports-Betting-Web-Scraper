@@ -1,11 +1,17 @@
-import codecs
 import time
 import requests
+import gspread
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+
+
+def getRange(index):
+    if index / 26 >= 1:
+        return chr(64 + (index // 26)) + chr(65 + (index % 26))
+    return chr(65 + index)
 
 
 class SportDynamic:
@@ -32,7 +38,8 @@ class SportDynamic:
         # list of all elements of sport categories
         sports = self.driver.find_elements(By.CSS_SELECTOR, "#sportSide > li")
         for sport in sports:
-            if sport.text != "SPORTS" and ("basketball" in sport.text.lower() or "football" in sport.text.lower()):
+            #if sport.text != "SPORTS" and ("basketball" in sport.text.lower() or "football" in sport.text.lower()):
+            if sport.text != "SPORTS" and ("football" in sport.text.lower()):
                 sport.find_element(By.CSS_SELECTOR, "a").click()
                 time.sleep(.2)
                 subsports = sport.find_elements(By.CSS_SELECTOR, "ul > li")
@@ -44,9 +51,8 @@ class SportDynamic:
                             pass
 
     def retrieveData(self):
-        # TODO fix bs scraper
-        self.driver.quit()
         html = self.driver.page_source
+        #self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
@@ -133,6 +139,32 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         self.sortData()
+        
+        
+gc = gspread.service_account(filename='credentials.json')
+print("Connected to Google Sheet")
+
+sh = gc.open("BettingScraper")
+worksheet = sh.get_worksheet(4)
+worksheet.clear()
+
+website = SportDynamic('https://www.purewage.com/')
+website.collectData()
 
 
-# Purewage All
+while 0 == 0:
+    
+    print('Starting')
+    
+    startingIndex = 0
+    for key in website.allBets:
+        ubdfNFL = website.displayData(key)
+        worksheet.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
+                            [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+        startingIndex += 4
+        
+    print('Updated')
+    
+    website.driver.find_element(By.XPATH, '//a[text()="Refresh Lines"]').click()
+    
+    time.sleep(30)
