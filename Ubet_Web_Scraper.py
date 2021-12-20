@@ -129,7 +129,7 @@ website = SportDynamic('https://ubet.ag/')
 website.collectData()
 
 
-while 0 == 0:
+while True:
     
     print('Starting')
     
@@ -141,7 +141,7 @@ while 0 == 0:
         startingIndex += 4
         
     print('Updated')
-    
-    website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
-    
+
     time.sleep(30)
+
+    website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()

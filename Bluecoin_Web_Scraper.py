@@ -1,5 +1,5 @@
-import codecs
 import time
+import gspread
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -8,10 +8,17 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
+def getRange(index):
+    if index / 26 >= 1:
+        return chr(64 + (index // 26)) + chr(65 + (index % 26))
+    return chr(65 + index)
+
+
 class SportDynamic:
     def __init__(self, url):
         self.allBets = {}
         self.url = url
+        self.soup = ""
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -28,27 +35,27 @@ class SportDynamic:
         self.driver.find_element(By.CSS_SELECTOR, "#ctl00_MainContent_LoginControl1_BtnSubmit").click()
 
     def navigateDriver(self):
-        # TODO change the selenium to only select relevant sports
         time.sleep(1)
         self.driver.find_element(By.CSS_SELECTOR, "#ctl00_WagerLnk_lnkSports").click()
         time.sleep(1)
         self.driver.find_element(By.CSS_SELECTOR, "#WT35").click()
         time.sleep(2)
-        menus = self.driver.find_elements(By.CSS_SELECTOR, "table[class='sp_hdr'] > tbody > tr > th > table > tbody > "
-                                                           "tr > td > a")
+        menus = self.driver.find_elements(By.CSS_SELECTOR, "a[class='league_switch']")[:5]
         # open up all the menus
         for menu in menus:
             if menu.text != "VIEW ALL":
                 menu.click()
-        sports = self.driver.find_elements(By.CSS_SELECTOR, "div[class='sw_sp_tbl'] > table > tbody > tr > td")
+                time.sleep(.5)
 
-        time.sleep(.5)
+        time.sleep(1)
+        sports = self.driver.find_elements(By.CSS_SELECTOR, "table[class='sp_tbl']")
         # click all the checkboxes in the menu that opens up
         for sport in sports:
-            buttons = sport.find_elements(By.CSS_SELECTOR, "div > span > input")
+            buttons = sport.find_elements(By.CSS_SELECTOR, "tbody > tr > td > div > span > input")
             for button in buttons:
                 try:
                     button.click()
+                    time.sleep(.05)
                 except:
                     pass
 
@@ -57,8 +64,10 @@ class SportDynamic:
     def retrieveData(self):
         html = self.driver.page_source
         # self.driver.quit()
-        soup = BeautifulSoup(html, "html.parser")
-        for event in soup.select('table > tbody')[1:41]:
+        self.soup = BeautifulSoup(html, "html.parser")
+
+    def sortData(self):
+        for event in self.soup.select('table > tbody')[1:41]:
             # try to find the event type in the first td element of the table
             try:
                 eventType = event.find('td').text
@@ -156,13 +165,9 @@ class SportDynamic:
                     # append onto the list of events, the dict of the micro betting events
                     self.allBets[eventType].append(tempEvent)
 
-    def presentData(self):
-        self.launchDriver()
-        self.enterDriver()
-        self.navigateDriver()
-        self.retrieveData()
+    def displayData(self, sport):
         df = pd.DataFrame()
-        for event in self.allBets['NFL']:
+        for event in self.allBets[sport]:
             for item in event:
                 df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
                                                   'Odds': event[item]['odds'],
@@ -170,7 +175,37 @@ class SportDynamic:
         df = df.fillna('')
         return df
 
-#%%
-# Bluecoin All
-# NFL = SportDynamic('http://bluecoin.ag/core/mobile/')
-# print(NFL.presentData())
+    def collectData(self):
+        self.launchDriver()
+        self.enterDriver()
+        self.navigateDriver()
+        self.retrieveData()
+        self.sortData()
+
+# %%
+gc = gspread.service_account(filename='credentials.json')
+print("Connected to Google Sheet")
+
+sh = gc.open("BettingScraper")
+worksheet = sh.get_worksheet(5)
+worksheet.clear()
+
+website = SportDynamic('http://bluecoin.ag/core/mobile/')
+website.collectData()
+
+while True:
+
+    print('Starting')
+
+    startingIndex = 0
+    for key in website.allBets:
+        ubdfNFL = website.displayData(key)
+        worksheet.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
+                         [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+        startingIndex += 4
+
+    print('Updated')
+
+    time.sleep(30)
+
+    website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
