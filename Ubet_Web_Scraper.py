@@ -101,7 +101,6 @@ class SportDynamic:
 
     def displayData(self, sport):
         df = pd.DataFrame()
-        # TODO make the dictionary parameter dynamic
         for event in self.allBets[sport]:
             for item in event:
                 df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],

@@ -33,8 +33,6 @@ def getRange(index):
 # check if worksheet works
 # print(worksheet.acell('A1').value)
 
-# TODO pass in parameters of what sport/category to pull, maybe do all of them
-# TODO separate executable files for each website, so mutliple drivers can run at once
 worksheetNFL.clear()
 worksheetCBB.clear()
 worksheetNBA.clear()
@@ -59,7 +57,6 @@ while True:
                           'event-cell__name-text']
 
 
-    # TODO create one object for each website, and call the collect_data function for each sport in each object
     # grab NFL worksheet
 
     # NFL = dkweb.SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561")
@@ -96,7 +93,6 @@ while True:
     # ubdfCFB = CFB.presentData()
     # worksheetCFB.update('F:H', [ubdfCFB.columns.values.tolist()] + ubdfCFB.values.tolist())
     #
-    # # # TODO fix the static string param
     # # CFB = wwweb.SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', "\'SportClick(\"12,1\",this)\'")
     # # wwdfCFB = CFB.presentData()
     # # worksheetCFB.update('J:L', [wwdfCFB.columns.values.tolist()] + wwdfCFB.values.tolist())

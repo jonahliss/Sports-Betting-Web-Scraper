@@ -1,4 +1,5 @@
 import time
+import gspread
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -6,39 +7,12 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-NFL = "\'SportClick(\"11,1\",this)\'"
-NCAA_Football = "\'SportClick(\"12,1\",this)\'"
-NBA = "\'SportClick(\"9,1\",this)\'"
-NCAA_Basketball = "\'SportClick(\"10,1\",this)\'"
-
-
-def appendDataTeams(html_list, new_list):
-    for item in html_list:
-        new_list.append(item.text)
-
-
-def appendDataSpreads(html_list, new_list):
-    for item in html_list:
-        new_list.append(item.text.strip())
-
-
-def appendDataOdds(html_list, new_list):
-    i = 0
-    for item in html_list:
-        if i % 3 == 0:
-            new_list.append(item.text)
-        i += 1
 
 class SportDynamic:
-    def __init__(self, url, league):
+    def __init__(self, url):
         self.url = url
-        self.league = league
-        self.teams_html = []
-        self.spreads_html = []
-        self.odds_html = []
-        self.teams_list = []
-        self.spreads_list = []
-        self.odds_list = []
+        self.soup = ""
+        self.allBets = {}
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -54,68 +28,56 @@ class SportDynamic:
         self.driver.find_element(By.XPATH, "//input[@value='login']").click()
 
     def navigateDriver(self):
-        self.driver.find_element(By.XPATH, "//div[@onclick=" + self.league + "]").click()
-        self.driver.find_element(By.CLASS_NAME, "bottomContinue").click()
+        time.sleep(5)
+        sports = website.driver.find_elements(By.CSS_SELECTOR, ".SportMenu_Div")
+        for sport in sports:
+            sportName = sport.find_element(By.TAG_NAME, "span").text
+            if sportName == "Football" or sportName == "Basketball":
+                time.sleep(.5)
+                events = sport.find_elements(By.CSS_SELECTOR, "*")
+                for event in events:
+                    try:
+                        event.click()
+                    except:
+                        pass
+
+        website.driver.find_element(By.NAME, "ctl00$cphWorkArea$cmdContinue").click()
 
     def retrieveData(self):
         html = self.driver.page_source
-        self.driver.quit()
-        soup = BeautifulSoup(html, "html.parser")
-        self.teams_html = soup.find_all(class_='team_name')
-        self.spreads_html = soup.find_all(class_='cboOdds cboLines')
-        self.odds_html = soup.find_all(class_='RadComboBoxItem')
+        self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
-        appendDataTeams(self.teams_html, self.teams_list)
-        appendDataSpreads(self.spreads_html, self.spreads_list)
-        appendDataOdds(self.odds_html, self.odds_list)
+        pass
 
-    def presentData(self):
+    def displayData(self, sport):
+        df = pd.DataFrame()
+        for event in self.allBets[sport]:
+            for item in event:
+                df = pd.concat([df, pd.DataFrame({'Teams': event[item]['team'], 'Spreads': event[item]['spread'],
+                                                  'Odds': event[item]['odds'],
+                                                  'Moneyline': event[item]['moneyline']})], axis=0)
+        df = df.fillna('')
+        return df
+
+    def collectData(self):
         self.launchDriver()
         self.enterDriver()
         self.navigateDriver()
         self.retrieveData()
         self.sortData()
-        df = pd.DataFrame()
-        df = pd.concat([df, pd.DataFrame({'Teams': self.teams_list}), pd.DataFrame({'Spreads': self.spreads_list}),
-                        pd.DataFrame({'Odds': self.odds_list})], axis=1)
-        df = df.fillna('')
-        return df
 
-'''
+
 # Wager Wizard NFL
-NFL = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NFL)
-NFL.launchDriver()
-NFL.enterDriver()
-NFL.navigateDriver()
-NFL.retrieveData()
-NFL.sortData()
-NFL.presentData()
+gc = gspread.service_account(filename='credentials.json')
+print("Connected to Google Sheet")
 
-# Wager Wizard CFB
-CFB = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NCAA_Football)
-CFB.launchDriver()
-CFB.enterDriver()
-CFB.navigateDriver()
-CFB.retrieveData()
-CFB.sortData()
-CFB.presentData()
+sh = gc.open("BettingScraper")
+worksheet = sh.get_worksheet(6)
+worksheet.clear()
 
-# Wager Wizard NBA
-NBA = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NBA)
-NBA.launchDriver()
-NBA.enterDriver()
-NBA.navigateDriver()
-NBA.retrieveData()
-NBA.sortData()
-NBA.presentData()
+#%%
 
-# Wager Wizard CBB
-CBB = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx', NCAA_Basketball)
-CBB.launchDriver()
-CBB.enterDriver()
-CBB.navigateDriver()
-CBB.retrieveData()
-CBB.sortData()
-CBB.presentData()
-'''
+website = SportDynamic('https://www.wagerwizard.ag/Logins/007/sites/wagerwizard/index.aspx')
+website.collectData()
+
