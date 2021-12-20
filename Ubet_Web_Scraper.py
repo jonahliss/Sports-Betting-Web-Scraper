@@ -144,3 +144,5 @@ while True:
     time.sleep(30)
 
     website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
+    website.retrieveData()
+    website.sortData()
