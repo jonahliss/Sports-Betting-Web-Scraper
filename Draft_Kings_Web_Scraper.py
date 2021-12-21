@@ -31,6 +31,9 @@ def formatKey(key):
     key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
+    key = key.replace("o\xa0", "o")
+    key = key.replace("u\xa0", "u")
+    key = key.replace("nan", "NaN")
     return key
 
 
@@ -89,26 +92,11 @@ class SportStatic:
                     except:
                         spread = "NaN"
                         odds = "NaN"
-                
-                '''
-                try:
-                    spread = child.find_all(class_='sportsbook-outcome-body-wrapper')[0].text
-                except:
-                    spread = "NaN"
-                try:
-                    odds = child.find_all(class_='sportsbook-outcome-body-wrapper')[1].text      
-                except:
-                    odds = "NaN"
-                try:
-                    moneyline = child.find_all(class_='sportsbook-outcome-body-wrapper')[2].text
-                except:
-                    moneyline = "NaN"
-                '''
 
-                self.teams_list.append(team)
-                self.spreads_list.append(spread)
-                self.odds_list.append(odds)
-                self.moneylines_list.append(moneyline)
+                self.teams_list.append(formatKey(team))
+                self.spreads_list.append(formatKey(spread))
+                self.odds_list.append(formatKey(odds))
+                self.moneylines_list.append(formatKey(moneyline))
 
     def displayData(self):
         self.retrieveData()
@@ -128,25 +116,52 @@ gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(5)
 
 
-scraping_list = [['A1','NFL','football/88670561','B:E'],
-                 ['F1','NFL Halves','football/88670561?category=halves','G:J'],
-                 ['K1','CFB','football/88670775', 'L:O'],
-                 ['P1','CFB Halves','football/88670775?category=halves', 'Q:T'],
-                 ['U1','NBA','basketball/88670846', 'V:Y'],
-                 ['Z1','NBA Halves','basketball/88670846?category=halves', 'AA:AD'],
-                 ['AE1','CBB','basketball/88670771', 'AF:AI'],
-                 ['AJ1','CBB Halves','basketball/88670771?category=halves', 'AK:AN']]
+scraping_list = [['A1','nfl','football/88670561','B:E',4],
+                 ['F1','nfl 1st half','football/88670561?category=halves&subcategory=1st-half','G:J',4],
+                 ['K1','nfl 2nd half','football/88670561?category=halves&subcategory=2nd-half','L:O',4],
+                 ['P1','nfl 1st quarter','football/88670561?category=quarters&subcategory=1st-quarter','Q:T',4],
+                 ['U1','nfl 2nd quarter','football/88670561?category=quarters&subcategory=2nd-quarter','V:Y',4],
+                 ['Z1','nfl 3rd quarter','football/88670561?category=quarters&subcategory=3rd-quarter','AA:AD',4],
+                 ['AE1','nfl 4th quarter','football/88670561?category=quarters&subcategory=4th-quarter','AF:AI',4],
+                 
+                 ['A1','ncaa football','football/88670775','B:E',3],
+                 ['F1','ncaa football 1st half','football/88670775?category=halves&subcategory=1st-half','G:J',3],
+                 ['K1','ncaa football 2nd half','football/88670775?category=halves&subcategory=2nd-half','L:O',3],
+                 ['P1','ncaa football 1st quarter','football/88670775?category=quarters&subcategory=1st-quarter','Q:T',3],
+                 ['U1','ncaa football 2nd quarter','football/88670775?category=quarters&subcategory=2nd-quarter','V:Y',3],
+                 ['Z1','ncaa football 3rd quarter','football/88670775?category=quarters&subcategory=3rd-quarter','AA:AD',3],
+                 ['AE1','ncaa football 4th quarter','football/88670775?category=quarters&subcategory=4th-quarter','AF:AI',3],
+                 
+                 ['A1','nba','basketball/88670846','B:E',2],
+                 ['F1','nba 1st half','basketball/88670846?category=halves&subcategory=1st-half','G:J',2],
+                 ['K1','nba 2nd half','basketball/88670846?category=halves&subcategory=2nd-half','L:O',2],
+                 ['P1','nba 1st quarter','basketball/88670846?category=quarters&subcategory=1st-quarter','Q:T',2],
+                 ['U1','nba 2nd quarter','basketball/88670846?category=quarters&subcategory=2nd-quarter','V:Y',2],
+                 ['Z1','nba 3rd quarter','basketball/88670846?category=quarters&subcategory=3rd-quarter','AA:AD',2],
+                 ['AE1','nba 4th quarter','basketball/88670846?category=quarters&subcategory=4th-quarter','AF:AI',2],
+                 
+                 ['A1','ncaa basketball','basketball/88670771','B:E',1],
+                 ['F1','ncaa basketball 1st half','basketball/88670771?category=halves&subcategory=1st-half','G:J',1],
+                 ['K1','ncaa basketball 2nd half','basketball/88670771?category=halves&subcategory=2nd-half','L:O',1],
+                 ['P1','ncaa basketball 1st quarter','basketball/88670771?category=quarters&subcategory=1st-quarter','Q:T',1],
+                 ['U1','ncaa basketball 2nd quarter','basketball/88670771?category=quarters&subcategory=2nd-quarter','V:Y',1],
+                 ['Z1','ncaa basketball 3rd quarter','basketball/88670771?category=quarters&subcategory=3rd-quarter','AA:AD',1],
+                 ['AE1','ncaa basketball 4th quarter','basketball/88670771?category=quarters&subcategory=4th-quarter','AF:AI',1]]
+
 
 while True:
     for item in scraping_list:
+    # Select Appropriate Spreadsheet
+        worksheet = sh.get_worksheet(item[4])
+    # Write Title onto Spreadsheet
         print('Starting', item[1])
         worksheet.update(item[0], item[1])
+    # Collect Data for Title 
         obj = SportStatic('https://sportsbook.draftkings.com/leagues/'+item[2])
         obj.collectData()
         df = obj.displayData()
+    # Insert Data into Spreadsheet
         worksheet.update(item[3], [df.columns.values.tolist()] + df.values.tolist())
         print('Updated', item[1])
-        
