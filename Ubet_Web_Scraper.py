@@ -123,7 +123,7 @@ gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(3)
+worksheet = sh.get_worksheet(2)
 worksheet.clear()
 
 website = SportDynamic('https://ubet.ag/')

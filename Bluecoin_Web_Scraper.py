@@ -187,7 +187,7 @@ gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(5)
+worksheet = sh.get_worksheet(4)
 worksheet.clear()
 
 website = SportDynamic('http://bluecoin.ag/core/mobile/')
