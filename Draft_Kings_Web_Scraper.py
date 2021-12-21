@@ -1,3 +1,5 @@
+import time
+
 import requests
 import gspread
 from bs4 import BeautifulSoup
@@ -29,6 +31,8 @@ class SportStatic:
             for child in children[1:]:
                 try:
                     team = child.find_all(class_='event-cell__name-text')[0].text
+                    team = team.lower()
+                    team = team.strip()
                 except:
                     team = "NaN"
                 try:
@@ -37,6 +41,8 @@ class SportStatic:
                     spread = "NaN"
                 try:
                     odds = child.find_all(class_='sportsbook-outcome-body-wrapper')[1].text
+                    odds = odds.replace('O ', 'o')
+                    odds = odds.replace('U ', 'u')
                 except:
                     odds = "NaN"
                 try:
@@ -67,10 +73,10 @@ gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(3)
+worksheet = sh.get_worksheet(2)
 
 
-while 0 == 0:
+while True:
     
     NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561")
     NFL.collectData()
@@ -95,3 +101,5 @@ while 0 == 0:
     dfCBB = CBB.displayData()
     worksheet.update('Q:T', [dfCBB.columns.values.tolist()] + dfCBB.values.tolist())
     print('CBB Updated')
+
+    time.sleep(10)

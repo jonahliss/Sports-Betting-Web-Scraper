@@ -73,6 +73,8 @@ class SportDynamic:
             for child in children[1:-1]:
                 try:
                     teamName = child.find_all('label')[0].text
+                    teamName = teamName.strip()
+                    teamName = teamName.lower()
                 except:
                     teamName = "NaN"
                 try:
@@ -121,7 +123,7 @@ gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(2)
+worksheet = sh.get_worksheet(3)
 worksheet.clear()
 
 website = SportDynamic('https://ubet.ag/')
@@ -135,9 +137,10 @@ while True:
     startingIndex = 0
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        worksheet.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
+        worksheet.update(getRange(startingIndex) + str(1), key.lower())
+        worksheet.update(getRange(startingIndex + 1) + ':' + getRange(startingIndex + 4),
                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
-        startingIndex += 4
+        startingIndex += 5
         
     print('Updated')
 

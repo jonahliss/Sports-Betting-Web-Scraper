@@ -38,10 +38,9 @@ class SportDynamic:
         # list of all elements of sport categories
         sports = self.driver.find_elements(By.CSS_SELECTOR, "#sportSide > li")
         for sport in sports:
-            #if sport.text != "SPORTS" and ("basketball" in sport.text.lower() or "football" in sport.text.lower()):
-            if sport.text != "SPORTS" and ("football" in sport.text.lower()):
+            if sport.text != "SPORTS" and ("basketball" in sport.text.lower() or "football" in sport.text.lower()):
                 sport.find_element(By.CSS_SELECTOR, "a").click()
-                time.sleep(.2)
+                time.sleep(.5)
                 subsports = sport.find_elements(By.CSS_SELECTOR, "ul > li")
                 for subsport in subsports:
                     if "PROPS" not in subsport.text:
@@ -86,6 +85,9 @@ class SportDynamic:
                     continue
                 try:
                     teamName = row.find(class_='linesTeam').select('span')[1].next
+                    teamName = str(teamName)
+                    teamName = teamName.strip()
+                    teamName = teamName.lower()
                 except:
                     teamName = "NaN"
                 try:
@@ -94,6 +96,8 @@ class SportDynamic:
                     spread = "NaN"
                 try:
                     odds = row.find(class_='linesMl').find('a').text
+                    odds = odds.replace('Ov ', 'o')
+                    odds = odds.replace('Un ', 'u')
                 except:
                     odds = "NaN"
                 try:
@@ -140,7 +144,7 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
         
-        
+
 gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
@@ -151,17 +155,17 @@ worksheet.clear()
 website = SportDynamic('https://www.purewage.com/')
 website.collectData()
 
-
-while 0 == 0:
+while True:
     
     print('Starting')
     
     startingIndex = 0
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        worksheet.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
+        worksheet.update(getRange(startingIndex) + str(1), key.lower())
+        worksheet.update(getRange(startingIndex + 1) + ':' + getRange(startingIndex + 4),
                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
-        startingIndex += 4
+        startingIndex += 5
         
     print('Updated')
     

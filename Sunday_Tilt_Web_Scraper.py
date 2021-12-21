@@ -167,9 +167,10 @@ while True:
     startingIndex = 0
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        worksheet.update(getRange(startingIndex) + ':' + getRange(startingIndex + 3),
+        worksheet.update(getRange(startingIndex) + str(1), key)
+        worksheet.update(getRange(startingIndex + 1) + ':' + getRange(startingIndex + 4),
                          [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
-        startingIndex += 4
+        startingIndex += 5
 
     print('Updated')
 
