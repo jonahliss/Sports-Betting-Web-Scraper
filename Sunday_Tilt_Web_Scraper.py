@@ -64,10 +64,7 @@ class SportDynamic:
                 checkbox.find_element(By.CSS_SELECTOR, 'div').click()
             except:
                 pass
-        self.driver.find_element(By.CSS_SELECTOR, "#{} > div > ul > li > a".format(self.sport)).click()
-        time.sleep(1)
-        # button = self.driver.find_element(By.XPATH, '//span[text()="Continue"]')
-        # button.click()
+
 
     def retrieveData(self):
         time.sleep(4)
@@ -75,15 +72,13 @@ class SportDynamic:
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
-        for event in self.soup.select('div.page-lines > div')[:-2]:
+        for event in website.soup.select('div.page-lines > div')[:-2]:
             # tries to find the "header-a" tags that hold the event types
             try:
                 eventType = event.find(class_='header-a').div.span.text
                 # creates a new list eventType in the allBets dictionary, which will hold
                 # dicts of the micro betting events
-                self.allBets[eventType] = []
-            # if no attribute of event is found, then
-            # set attr to empty string
+                website.allBets[eventType] = []
             except:
                 pass
             # create a temporary dictionary to hold the event
@@ -97,29 +92,52 @@ class SportDynamic:
 
             # gets the name of the event as a html tag
             teams = event.select('div.lines > div')
-            for team in teams:
-                data = team.find_all('div', recursive=False)
+            if len(teams) == 0:
+                continue
+
+            if len(teams) == 3:
+                futures = teams[0].select('div.group')
                 try:
-                    teamName = data[0].select('div.team > span')[0].text
+                    teamName = futures[0].find('div', class_='team').select('span')[1].text
                 except:
                     teamName = "NaN"
                 try:
-                    spread = data[1].select('div > span')[0].text
-                except:
-                    spread = "NaN"
-                try:
-                    odds = data[3].select('div > span')[0].text
-                except:
-                    odds = "NaN"
-                try:
-                    moneyline = data[2].select('div > span')[0].text
+                    moneyline = futures[1].find('div', class_='line-play').span.text
                 except:
                     moneyline = "NaN"
-
+                odds = "NaN"
+                spread = "NaN"
                 bettingData["team"].append(teamName)
                 bettingData["spread"].append(spread)
                 bettingData["odds"].append(odds)
                 bettingData["moneyline"].append(moneyline)
+
+            else:
+                for team in teams:
+                    data = team.find_all('div', recursive=False)
+                    try:
+                        teamName = data[0].select('div.team > span')[0].text
+                    except:
+                        teamName = "NaN"
+                    try:
+                        spread = data[1].select('div > span')[0].text
+                    except:
+                        spread = "NaN"
+                    try:
+                        odds = data[3].select('div > span')[0].text
+                        odds = odds.replace('O ', 'o')
+                        odds = odds.replace('U ', 'u')
+                    except:
+                        odds = "NaN"
+                    try:
+                        moneyline = data[2].select('div > span')[0].text
+                    except:
+                        moneyline = "NaN"
+
+                    bettingData["team"].append(teamName)
+                    bettingData["spread"].append(spread)
+                    bettingData["odds"].append(odds)
+                    bettingData["moneyline"].append(moneyline)
 
             # create unique key for the event
             eventName = eventName + ": " + teamName
@@ -127,7 +145,7 @@ class SportDynamic:
             # sets the betting data of the temporary event
             tempEvent[eventName] = bettingData
             # append onto the list of events, the dict of the micro betting events
-            self.allBets[eventType].append(tempEvent)
+            website.allBets[eventType].append(tempEvent)
 
     def displayData(self, sport):
         df = pd.DataFrame()
@@ -160,6 +178,7 @@ worksheet.clear()
 website = SportDynamic('https://www.sundaytilt.com/')
 website.collectData()
 
+#%%
 while True:
 
     print('Starting')
@@ -167,7 +186,7 @@ while True:
     startingIndex = 0
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        worksheet.update(getRange(startingIndex) + str(1), key)
+        worksheet.update(getRange(startingIndex) + str(1), key.lower())
         worksheet.update(getRange(startingIndex + 1) + ':' + getRange(startingIndex + 4),
                          [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
         startingIndex += 5
