@@ -141,7 +141,6 @@ scraping_list = [['A1','NFL','https://sportsbook.draftkings.com/leagues/football
                  ['AJ1','CBB Halves','https://sportsbook.draftkings.com/leagues/basketball/88670771?category=halves', 'AK:AN']]
 
 while True:
-    
     for item in scraping_list:
         print('Starting', item[1])
         worksheet.update(item[0], item[1])
