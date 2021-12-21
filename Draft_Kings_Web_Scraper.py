@@ -131,21 +131,22 @@ sh = gc.open("BettingScraper")
 worksheet = sh.get_worksheet(5)
 
 
-scraping_list = [['A1','NFL','https://sportsbook.draftkings.com/leagues/football/88670561','B:E'],
-                 ['F1','NFL Halves','https://sportsbook.draftkings.com/leagues/football/88670561?category=halves','G:J'],
-                 ['K1','CFB','https://sportsbook.draftkings.com/leagues/football/88670775', 'L:O'],
-                 ['P1','CFB Halves','https://sportsbook.draftkings.com/leagues/football/88670775?category=halves', 'Q:T'],
-                 ['U1','NBA','https://sportsbook.draftkings.com/leagues/basketball/88670846', 'V:Y'],
-                 ['Z1','NBA Halves','https://sportsbook.draftkings.com/leagues/basketball/88670846?category=halves', 'AA:AD'],
-                 ['AE1','CBB','https://sportsbook.draftkings.com/leagues/basketball/88670771', 'AF:AI'],
-                 ['AJ1','CBB Halves','https://sportsbook.draftkings.com/leagues/basketball/88670771?category=halves', 'AK:AN']]
+scraping_list = [['A1','NFL','football/88670561','B:E'],
+                 ['F1','NFL Halves','football/88670561?category=halves','G:J'],
+                 ['K1','CFB','football/88670775', 'L:O'],
+                 ['P1','CFB Halves','football/88670775?category=halves', 'Q:T'],
+                 ['U1','NBA','basketball/88670846', 'V:Y'],
+                 ['Z1','NBA Halves','basketball/88670846?category=halves', 'AA:AD'],
+                 ['AE1','CBB','basketball/88670771', 'AF:AI'],
+                 ['AJ1','CBB Halves','basketball/88670771?category=halves', 'AK:AN']]
 
 while True:
     for item in scraping_list:
         print('Starting', item[1])
         worksheet.update(item[0], item[1])
-        obj = SportStatic(item[2])
+        obj = SportStatic('https://sportsbook.draftkings.com/leagues/'+item[2])
         obj.collectData()
         df = obj.displayData()
         worksheet.update(item[3], [df.columns.values.tolist()] + df.values.tolist())
         print('Updated', item[1])
+        
