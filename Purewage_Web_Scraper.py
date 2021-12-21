@@ -14,6 +14,25 @@ def getRange(index):
     return chr(65 + index)
 
 
+def formatKey(key):
+    key = key.lower()
+    key = key.replace("(", "")
+    key = key.replace(")", "")
+    key = key.replace(" - ", " ")
+    key = key.replace("1h", "1st half")
+    key = key.replace("2h", "2nd half")
+    key = key.replace("1q", "1st quarter")
+    key = key.replace("qtr", "quarter")
+    key = key.replace("2q", "2nd quarter")
+    key = key.replace("3q", "3rd quarter")
+    key = key.replace("4q", "4th quarter")
+    key = key.replace("bk", "basketball")
+    key = key.replace("b ", "basketball")
+    key = key.replace("fb", "football")
+    key = key.replace("lines", "")
+    return key
+
+
 class SportDynamic:
     def __init__(self, url):
         self.url = url
@@ -51,15 +70,13 @@ class SportDynamic:
 
     def retrieveData(self):
         html = self.driver.page_source
-        #self.driver.quit()
+        # self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
         for event in self.soup.find_all(class_='panel panel-transparent'):
             try:
                 eventType = event.find(class_='panel-title linesPanelTitle').text
-                # TODO fix the string new line chraracters
-                eventType.strip()
                 # creates a new list eventType in the allBets dictionary, which will hold
                 # dicts of the micro betting events
                 self.allBets[eventType] = []
@@ -143,32 +160,85 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         self.sortData()
-        
+
 
 gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(3)
-worksheet.clear()
 
 website = SportDynamic('https://www.purewage.com/')
-website.collectData()
+sh.get_worksheet(1).clear()
+sh.get_worksheet(2).clear()
+sh.get_worksheet(3).clear()
+sh.get_worksheet(4).clear()
 
+# %%
+website.collectData()
+# website.launchDriver()
+# website.enterDriver()
+#
+# #%%
+# website.retrieveData()
+# %%
 while True:
-    
+
     print('Starting')
-    
+
+    startingIndexCBB = 0
+    startingIndexNBA = 0
+    startingIndexCFB = 0
+    startingIndexNFL = 0
     startingIndex = 0
+    # TODO purewage missing basketball in allbets dict
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        worksheet.update(getRange(startingIndex) + str(1), key.lower())
-        worksheet.update(getRange(startingIndex + 1) + ':' + getRange(startingIndex + 4),
-                            [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
-        startingIndex += 5
-        
+        key = formatKey(key)
+        bagOfWords = key.split()
+        if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
+            print('NCAA Basketball')
+            worksheet = sh.get_worksheet(1)
+            while len(worksheet.col_values(startingIndexCBB + 1)) > 0:
+                startingIndexCBB += 5
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+        elif 'nba' in bagOfWords:
+            print('NBA')
+            worksheet = sh.get_worksheet(2)
+            while len(worksheet.col_values(startingIndexNBA + 1)) > 0:
+                startingIndexNBA += 5
+            startingIndexNBA += 5
+            startingIndex = startingIndexNBA
+        elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
+            print('NCAA Football')
+            worksheet = sh.get_worksheet(3)
+            while len(worksheet.col_values(startingIndexCFB + 1)) > 0:
+                startingIndexCFB += 5
+            startingIndexCFB += 5
+            startingIndex = startingIndexCFB
+        elif 'nfl' in bagOfWords:
+            print('NFL')
+            worksheet = sh.get_worksheet(4)
+            while len(worksheet.col_values(startingIndexNFL + 1)) > 0:
+                startingIndexNFL += 5
+            startingIndexNFL += 5
+            startingIndex = startingIndexNFL
+        else:
+            continue
+        # TODO implement batch update
+        worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Purewage"]])
+        worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                         [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+        worksheet.format(getRange(startingIndex - 5) + ':' + getRange(startingIndex - 1), {
+            "backgroundColor": {
+                "red": 0.25,
+                "green": 0.5,
+                "blue": 0.95
+            },
+        })
+
     print('Updated')
-    
+
     website.driver.find_element(By.XPATH, '//a[text()="Refresh Lines"]').click()
-    
+
     time.sleep(30)

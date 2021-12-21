@@ -13,6 +13,26 @@ def getRange(index):
         return chr(64 + (index // 26)) + chr(65 + (index % 26))
     return chr(65 + index)
 
+# PURPOSE: removes all special chracters from the key
+# PURPOSE: makes the key lowercase
+def formatKey(key):
+    key = key.lower()
+    key = key.replace("(", "")
+    key = key.replace(")", "")
+    key = key.replace(" - ", " ")
+    key = key.replace("1h", "1st half")
+    key = key.replace("2h", "2nd half")
+    key = key.replace("1q", "1st quarter")
+    key = key.replace("qtr", "quarter")
+    key = key.replace("2q", "2nd quarter")
+    key = key.replace("3q", "3rd quarter")
+    key = key.replace("4q", "4th quarter")
+    key = key.replace("bk", "basketball")
+    key = key.replace("b ", "basketball")
+    key = key.replace("fb", "football")
+    key = key.replace("lines", "")
+    return key
+
 
 class SportDynamic:
     def __init__(self, url):
@@ -133,15 +153,50 @@ website.collectData()
 while True:
     
     print('Starting')
-    
+
+    startingIndexCBB = 0
+    startingIndexNBA = 0
+    startingIndexCFB = 0
+    startingIndexNFL = 0
     startingIndex = 0
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        worksheet.update(getRange(startingIndex) + str(1), key.lower())
-        worksheet.update(getRange(startingIndex + 1) + ':' + getRange(startingIndex + 4),
-                            [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
-        startingIndex += 5
-        
+        key = formatKey(key)
+        bagOfWords = key.split()
+        if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
+            print('NCAA Basketball')
+            worksheet = sh.get_worksheet(1)
+            while len(worksheet.col_values(startingIndexCBB + 1)) > 0:
+                startingIndexCBB += 5
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+        elif 'nba' in bagOfWords:
+            print('NBA')
+            worksheet = sh.get_worksheet(2)
+            while len(worksheet.col_values(startingIndexNBA + 1)) > 0:
+                startingIndexNBA += 5
+            startingIndexNBA += 5
+            startingIndex = startingIndexNBA
+        elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
+            print('NCAA Football')
+            worksheet = sh.get_worksheet(3)
+            while len(worksheet.col_values(startingIndexCFB + 1)) > 0:
+                startingIndexCFB += 5
+            startingIndexCFB += 5
+            startingIndex = startingIndexCFB
+        elif 'nfl' in bagOfWords:
+            print('NFL')
+            worksheet = sh.get_worksheet(4)
+            while len(worksheet.col_values(startingIndexNFL + 1)) > 0:
+                startingIndexNFL += 5
+            startingIndexNFL += 5
+            startingIndex = startingIndexNFL
+        else:
+            continue
+        worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+        worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                         [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+
     print('Updated')
 
     time.sleep(30)
