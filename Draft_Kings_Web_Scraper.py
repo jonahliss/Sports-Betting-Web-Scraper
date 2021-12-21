@@ -140,7 +140,7 @@ scraping_list = [['A1','NFL','https://sportsbook.draftkings.com/leagues/football
                  ['AE1','CBB','https://sportsbook.draftkings.com/leagues/basketball/88670771', 'AF:AI'],
                  ['AJ1','CBB Halves','https://sportsbook.draftkings.com/leagues/basketball/88670771?category=halves', 'AK:AN']]
 
-while 0 == 0:
+while True:
     
     for item in scraping_list:
         print('Starting', item[1])
