@@ -37,6 +37,7 @@ def formatKey(key):
     key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
+    key = key.replace("nan", "NaN")
     return key
 
 
@@ -96,30 +97,32 @@ class SportDynamic:
             # gets the team and spreads of the event
             bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
             children = event.find_all('div', class_='row py-4')
+            
+            teamName = "NaN"
+            spread = "NaN"
+            odds = "NaN"
+            moneyline = "NaN"
+            
             for child in children[1:-1]:
-                try:
-                    teamName = child.find_all('label')[0].text
-                    teamName = teamName.strip()
-                    teamName = teamName.lower()
-                except:
-                    teamName = "NaN"
-                try:
-                    spread = child.find_all('label')[1].text
-                except:
-                    spread = "NaN"
-                try:
-                    odds = child.find_all('label')[2].text
-                except:
-                    odds = "NaN"
-                try:
-                    moneyline = child.find_all('label')[3].text
-                except:
-                    moneyline = "NaN"
+                for i in range(4):
+                    try:
+                        temp = child.find_all('label')[i].text
+                        
+                        if temp == child.find_all('label')[0].text:
+                            teamName = temp
+                        elif 'o' in temp or 'u' in temp:
+                            odds = temp
+                        elif (temp.count('+') + temp.count('-')) == 2:
+                            spread = temp
+                        elif (temp.count('+') + temp.count('-')) == 1:
+                            moneyline = temp
+                    except:
+                        pass
 
-                bettingData["team"].append(teamName)
-                bettingData["spread"].append(spread)
-                bettingData["odds"].append(odds)
-                bettingData["moneyline"].append(moneyline)
+                bettingData["team"].append(formatKey(teamName))
+                bettingData["spread"].append(formatKey(spread))
+                bettingData["odds"].append(formatKey(odds))
+                bettingData["moneyline"].append(formatKey(moneyline))
 
             # sets the betting data of the temporary event
             tempEvent[eventName.text] = bettingData
@@ -145,18 +148,18 @@ class SportDynamic:
         self.sortData()
 
 
-# %%
 gc = gspread.service_account(filename='credentials.json')
-print("Connected to Google Sheet")
-
 sh = gc.open("BettingScraper")
+print("Connected to Google Sheet")
 
 website = SportDynamic('https://ubet.ag/')
 website.collectData()
 
-# %%
-while True:
+startTime = time.perf_counter() 
 
+
+while True:
+    
     print('Starting')
 
     startingIndexCBB = 1800
@@ -164,6 +167,7 @@ while True:
     startingIndexCFB = 1800
     startingIndexNFL = 1800
     startingIndex = 1800
+    
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = formatKey(key)
@@ -171,33 +175,57 @@ while True:
         if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
             print('NCAA Basketball')
             worksheet = sh.get_worksheet(1)
+            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
         elif 'nba' in bagOfWords:
             print('NBA')
             worksheet = sh.get_worksheet(2)
+            worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
         elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
+            worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
         elif 'nfl' in bagOfWords:
             print('NFL')
             worksheet = sh.get_worksheet(4)
+            worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
         else:
             continue
-        worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
-        worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
-                         [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+            
+        try:
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+        except:
+            
+            failTime = time.perf_counter()
+            pause = 101 - (failTime - startTime)
+            
+            print('Pausing for', pause, 'seconds')
+            time.sleep(pause)
+            print('Resuming')
+            
+            gc = gspread.service_account(filename='credentials.json')
+            sh = gc.open("BettingScraper")
+            
+            worksheet = sh.get_worksheet(worksheetNumber)
+            
+            startTime = time.perf_counter() 
+            
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+
 
     print('Updated')
-
-    time.sleep(30)
-
+    
     website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
     website.retrieveData()
     website.sortData()
