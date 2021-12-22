@@ -1,15 +1,47 @@
-import time
-
 import requests
 import gspread
 from bs4 import BeautifulSoup
 import pandas as pd
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 def getRange(index):
     if index / 26 >= 1:
         return chr(64 + (index // 26)) + chr(65 + (index % 26))
     return chr(65 + index)
+
+
+# PURPOSE: removes all special chracters from the key
+# PURPOSE: makes the key lowercase
+def formatKey(key):
+    key = key.lower()
+    key = key.replace("(", "")
+    key = key.replace(")", "")
+    key = key.replace(" - ", " ")
+    key = key.replace("1h", "1st half")
+    key = key.replace("2h", "2nd half")
+    key = key.replace("1q", "1st quarter")
+    key = key.replace("qtr", "quarter")
+    key = key.replace("2q", "2nd quarter")
+    key = key.replace("3q", "3rd quarter")
+    key = key.replace("4q", "4th quarter")
+    key = key.replace("bk", "basketball")
+    key = key.replace("b ", "basketball")
+    key = key.replace("fb", "football")
+    key = key.replace("lines", "")
+    key = key.replace("o\xa0", "o")
+    key = key.replace("u\xa0", "u")
+    key = key.replace("nan", "NaN")
+    return key
+
+
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage')
+driver = webdriver.Chrome(ChromeDriverManager().install())
 
 
 class SportStatic:
@@ -20,10 +52,11 @@ class SportStatic:
         self.odds_list = []
         self.moneylines_list = []
         self.df = []
-
+        
     def retrieveData(self):
-        page = requests.get(self.url)
-        self.soup = BeautifulSoup(page.content, "html.parser")
+        driver.get(self.url)
+        page = driver.page_source
+        self.soup = BeautifulSoup(page, "html.parser")
 
     def sortData(self):
         for event in self.soup.select('div.parlay-card-10-a'):
@@ -31,29 +64,39 @@ class SportStatic:
             for child in children[1:]:
                 try:
                     team = child.find_all(class_='event-cell__name-text')[0].text
-                    team = team.lower()
-                    team = team.strip()
                 except:
                     team = "NaN"
                 try:
-                    spread = child.find_all(class_='sportsbook-outcome-body-wrapper')[0].text
-                except:
-                    spread = "NaN"
-                try:
-                    odds = child.find_all(class_='sportsbook-outcome-body-wrapper')[1].text
-                    odds = odds.replace('O ', 'o')
-                    odds = odds.replace('U ', 'u')
-                except:
-                    odds = "NaN"
-                try:
-                    moneyline = child.find_all(class_='sportsbook-outcome-body-wrapper')[2].text
+                    moneyline = child.find_all(class_='sportsbook-odds american no-margin default-color')[0].text
                 except:
                     moneyline = "NaN"
+                try:
+                    temp = child.find_all(class_='sportsbook-outcome-body-wrapper')[1].text
+                    if (temp == moneyline):
+                        odds = "NaN"
+                    else:
+                        odds = temp
+                    spread = child.find_all(class_='sportsbook-outcome-body-wrapper')[0].text
+                except:
+                    try:
+                        temp = child.find_all(class_='sportsbook-outcome-body-wrapper')[0].text 
+                        if (temp[0] == 'O' or temp[0] == 'U'):
+                            spread = "NaN"
+                            odds = temp
+                        elif (temp == moneyline):
+                            spread = "NaN"
+                            odds = "NaN"
+                        else:
+                            spread = temp
+                            odds = "NaN"
+                    except:
+                        spread = "NaN"
+                        odds = "NaN"
 
-                self.teams_list.append(team)
-                self.spreads_list.append(spread)
-                self.odds_list.append(odds)
-                self.moneylines_list.append(moneyline)
+                self.teams_list.append(formatKey(team))
+                self.spreads_list.append(formatKey(spread))
+                self.odds_list.append(formatKey(odds))
+                self.moneylines_list.append(formatKey(moneyline))
 
     def displayData(self):
         self.retrieveData()
@@ -68,38 +111,57 @@ class SportStatic:
         self.retrieveData()
         self.sortData()
         
-
+ 
 gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(1)
+
+
+scraping_list = [['A1','nfl','football/88670561','B:E',4],
+                 ['F1','nfl 1st half','football/88670561?category=halves&subcategory=1st-half','G:J',4],
+                 ['K1','nfl 2nd half','football/88670561?category=halves&subcategory=2nd-half','L:O',4],
+                 ['P1','nfl 1st quarter','football/88670561?category=quarters&subcategory=1st-quarter','Q:T',4],
+                 ['U1','nfl 2nd quarter','football/88670561?category=quarters&subcategory=2nd-quarter','V:Y',4],
+                 ['Z1','nfl 3rd quarter','football/88670561?category=quarters&subcategory=3rd-quarter','AA:AD',4],
+                 ['AE1','nfl 4th quarter','football/88670561?category=quarters&subcategory=4th-quarter','AF:AI',4],
+                 
+                 ['A1','ncaa football','football/88670775','B:E',3],
+                 ['F1','ncaa football 1st half','football/88670775?category=halves&subcategory=1st-half','G:J',3],
+                 ['K1','ncaa football 2nd half','football/88670775?category=halves&subcategory=2nd-half','L:O',3],
+                 ['P1','ncaa football 1st quarter','football/88670775?category=quarters&subcategory=1st-quarter','Q:T',3],
+                 ['U1','ncaa football 2nd quarter','football/88670775?category=quarters&subcategory=2nd-quarter','V:Y',3],
+                 ['Z1','ncaa football 3rd quarter','football/88670775?category=quarters&subcategory=3rd-quarter','AA:AD',3],
+                 ['AE1','ncaa football 4th quarter','football/88670775?category=quarters&subcategory=4th-quarter','AF:AI',3],
+                 
+                 ['A1','nba','basketball/88670846','B:E',2],
+                 ['F1','nba 1st half','basketball/88670846?category=halves&subcategory=1st-half','G:J',2],
+                 ['K1','nba 2nd half','basketball/88670846?category=halves&subcategory=2nd-half','L:O',2],
+                 ['P1','nba 1st quarter','basketball/88670846?category=quarters&subcategory=1st-quarter','Q:T',2],
+                 ['U1','nba 2nd quarter','basketball/88670846?category=quarters&subcategory=2nd-quarter','V:Y',2],
+                 ['Z1','nba 3rd quarter','basketball/88670846?category=quarters&subcategory=3rd-quarter','AA:AD',2],
+                 ['AE1','nba 4th quarter','basketball/88670846?category=quarters&subcategory=4th-quarter','AF:AI',2],
+                 
+                 ['A1','ncaa basketball','basketball/88670771','B:E',1],
+                 ['F1','ncaa basketball 1st half','basketball/88670771?category=halves&subcategory=1st-half','G:J',1],
+                 ['K1','ncaa basketball 2nd half','basketball/88670771?category=halves&subcategory=2nd-half','L:O',1],
+                 ['P1','ncaa basketball 1st quarter','basketball/88670771?category=quarters&subcategory=1st-quarter','Q:T',1],
+                 ['U1','ncaa basketball 2nd quarter','basketball/88670771?category=quarters&subcategory=2nd-quarter','V:Y',1],
+                 ['Z1','ncaa basketball 3rd quarter','basketball/88670771?category=quarters&subcategory=3rd-quarter','AA:AD',1],
+                 ['AE1','ncaa basketball 4th quarter','basketball/88670771?category=quarters&subcategory=4th-quarter','AF:AI',1]]
 
 
 while True:
-    
-    NFL = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670561")
-    NFL.collectData()
-    dfNFL = NFL.displayData()
-    worksheet.update('B:E', [dfNFL.columns.values.tolist()] + dfNFL.values.tolist())
-    print('NFL Updated')
-    
-    CFB = SportStatic("https://sportsbook.draftkings.com/leagues/football/88670775")
-    CFB.collectData()
-    dfCFB = CFB.displayData()
-    worksheet.update('G:J', [dfCFB.columns.values.tolist()] + dfCFB.values.tolist())
-    print('CFB Updated')
-    
-    NBA = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670846")
-    NBA.collectData()
-    dfNBA = NBA.displayData()
-    worksheet.update('L:O', [dfNBA.columns.values.tolist()] + dfNBA.values.tolist())
-    print('NBA Updated')
-    
-    CBB = SportStatic("https://sportsbook.draftkings.com/leagues/basketball/88670771")
-    CBB.collectData()
-    dfCBB = CBB.displayData()
-    worksheet.update('Q:T', [dfCBB.columns.values.tolist()] + dfCBB.values.tolist())
-    print('CBB Updated')
-
-    time.sleep(10)
+    for item in scraping_list:
+    # Select Appropriate Spreadsheet
+        worksheet = sh.get_worksheet(item[4])
+    # Write Title onto Spreadsheet
+        print('Starting', item[1])
+        worksheet.update(item[0], item[1])
+    # Collect Data for Title 
+        obj = SportStatic('https://sportsbook.draftkings.com/leagues/'+item[2])
+        obj.collectData()
+        df = obj.displayData()
+    # Insert Data into Spreadsheet
+        worksheet.update(item[3], [df.columns.values.tolist()] + df.values.tolist())
+        print('Updated', item[1])
