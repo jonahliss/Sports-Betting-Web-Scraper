@@ -1,3 +1,4 @@
+import math
 import time
 import requests
 import gspread
@@ -9,9 +10,14 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 def getRange(index):
+    if (index - 26) / math.pow(26, 2) >= 1:
+        return chr(64 + (index // int(math.pow(26, 2)))) + chr(
+            65 + (((index - 26) % int(math.pow(26, 2))) // 26)) + chr(
+            65 + (index % 26))
     if index / 26 >= 1:
         return chr(64 + (index // 26)) + chr(65 + (index % 26))
     return chr(65 + index)
+
 
 # PURPOSE: removes all special chracters from the key
 # PURPOSE: makes the key lowercase
@@ -56,7 +62,7 @@ class SportDynamic:
     def navigateDriver(self):
         self.driver.find_element(By.ID, "ctl00_lnkSports").click()
         leagues = []
-        #leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_IN-HOUSELIVEWAGERING'))
+        # leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_IN-HOUSELIVEWAGERING'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEBASKETBALL'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_FOOTBALL'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEFOOTBALL'))
@@ -72,7 +78,7 @@ class SportDynamic:
 
     def retrieveData(self):
         html = self.driver.page_source
-        #self.driver.quit()
+        # self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
@@ -139,26 +145,25 @@ class SportDynamic:
         self.sortData()
 
 
+# %%
 gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(2)
-worksheet.clear()
 
 website = SportDynamic('https://ubet.ag/')
 website.collectData()
 
-
+# %%
 while True:
-    
+
     print('Starting')
 
-    startingIndexCBB = 0
-    startingIndexNBA = 0
-    startingIndexCFB = 0
-    startingIndexNFL = 0
-    startingIndex = 0
+    startingIndexCBB = 1800
+    startingIndexNBA = 1800
+    startingIndexCFB = 1800
+    startingIndexNFL = 1800
+    startingIndex = 1800
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = formatKey(key)

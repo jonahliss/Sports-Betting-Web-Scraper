@@ -1,3 +1,4 @@
+import math
 import time
 import requests
 import gspread
@@ -9,6 +10,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 def getRange(index):
+    if (index - 26) / math.pow(26, 2) >= 1:
+        return chr(64 + (index // int(math.pow(26, 2)))) + chr(
+            65 + (((index - 26) % int(math.pow(26, 2))) // 26)) + chr(
+            65 + (index % 26))
     if index / 26 >= 1:
         return chr(64 + (index // 26)) + chr(65 + (index % 26))
     return chr(65 + index)
@@ -162,16 +167,14 @@ class SportDynamic:
         self.sortData()
 
 
+# %%
 gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
 
+# %%
 website = SportDynamic('https://www.purewage.com/')
-sh.get_worksheet(1).clear()
-sh.get_worksheet(2).clear()
-sh.get_worksheet(3).clear()
-sh.get_worksheet(4).clear()
 
 # %%
 website.collectData()
@@ -185,11 +188,11 @@ while True:
 
     print('Starting')
 
-    startingIndexCBB = 0
-    startingIndexNBA = 0
-    startingIndexCFB = 0
-    startingIndexNFL = 0
-    startingIndex = 0
+    startingIndexCBB = 600
+    startingIndexNBA = 600
+    startingIndexCFB = 600
+    startingIndexNFL = 600
+    startingIndex = 600
     # TODO purewage missing basketball in allbets dict
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
@@ -198,29 +201,21 @@ while True:
         if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
             print('NCAA Basketball')
             worksheet = sh.get_worksheet(1)
-            while len(worksheet.col_values(startingIndexCBB + 1)) > 0:
-                startingIndexCBB += 5
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
         elif 'nba' in bagOfWords:
             print('NBA')
             worksheet = sh.get_worksheet(2)
-            while len(worksheet.col_values(startingIndexNBA + 1)) > 0:
-                startingIndexNBA += 5
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
         elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
-            while len(worksheet.col_values(startingIndexCFB + 1)) > 0:
-                startingIndexCFB += 5
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
         elif 'nfl' in bagOfWords:
             print('NFL')
             worksheet = sh.get_worksheet(4)
-            while len(worksheet.col_values(startingIndexNFL + 1)) > 0:
-                startingIndexNFL += 5
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
         else:

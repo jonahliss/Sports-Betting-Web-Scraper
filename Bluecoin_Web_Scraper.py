@@ -1,3 +1,4 @@
+import math
 import time
 import gspread
 import requests
@@ -9,6 +10,10 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 def getRange(index):
+    if (index - 26) / math.pow(26, 2) >= 1:
+        return chr(64 + (index // int(math.pow(26, 2)))) + chr(
+            65 + (((index - 26) % int(math.pow(26, 2))) // 26)) + chr(
+            65 + (index % 26))
     if index / 26 >= 1:
         return chr(64 + (index // 26)) + chr(65 + (index % 26))
     return chr(65 + index)
@@ -204,8 +209,6 @@ gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(4)
-worksheet.clear()
 
 website = SportDynamic('http://bluecoin.ag/core/mobile/')
 website.collectData()
@@ -214,11 +217,11 @@ while True:
 
     print('Starting')
 
-    startingIndexCBB = 0
-    startingIndexNBA = 0
-    startingIndexCFB = 0
-    startingIndexNFL = 0
-    startingIndex = 0
+    startingIndexCBB = 2400
+    startingIndexNBA = 2400
+    startingIndexCFB = 2400
+    startingIndexNFL = 2400
+    startingIndex = 2400
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = formatKey(key)

@@ -1,13 +1,19 @@
+import math
 import time
 import gspread
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
 def getRange(index):
+    if (index - 26) / math.pow(26, 2) >= 1:
+        return chr(64 + (index // int(math.pow(26, 2)))) + chr(
+            65 + (((index - 26) % int(math.pow(26, 2))) // 26)) + chr(
+            65 + (index % 26))
     if index / 26 >= 1:
         return chr(64 + (index // 26)) + chr(65 + (index % 26))
     return chr(65 + index)
@@ -51,11 +57,11 @@ class SportDynamic:
         username.send_keys("Gh75")
         password.send_keys("soccer1")
         self.driver.find_element(By.XPATH, '//button[text()="LOGIN"]').click()
-        self.driver.find_element(By.XPATH, '//button[text()="LOGIN"]').click()
 
     def navigateDriver(self):
         time.sleep(12)
         self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='BASKETBALL'] a").click()
+        self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + Keys.HOME)
         time.sleep(1)
         # inserts the sport and league into the appropriate css locator
         enter_nfl = self.driver.find_elements(By.CSS_SELECTOR,
@@ -189,9 +195,6 @@ gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
-worksheet = sh.get_worksheet(5)
-worksheet.clear()
-
 #%%
 
 website = SportDynamic('https://www.sundaytilt.com/')
@@ -202,11 +205,11 @@ while True:
 
     print('Starting')
 
-    startingIndexCBB = 0
-    startingIndexNBA = 0
-    startingIndexCFB = 0
-    startingIndexNFL = 0
-    startingIndex = 0
+    startingIndexCBB = 1200
+    startingIndexNBA = 1200
+    startingIndexCFB = 1200
+    startingIndexNFL = 1200
+    startingIndex = 1200
     # TODO purewage missing basketball in allbets dict
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
