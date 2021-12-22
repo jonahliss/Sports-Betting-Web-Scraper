@@ -78,6 +78,7 @@ class SportStatic:
                         
                         if 'O' in temp or 'U' in temp:
                             odds = temp
+                            odds = odds.replace("½", ".5")
                         elif (temp.count('+') + temp.count('-')) == 2:
                             spread = temp
                         elif (temp.count('+') + temp.count('-')) == 1:

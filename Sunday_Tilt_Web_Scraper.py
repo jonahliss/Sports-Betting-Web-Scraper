@@ -157,6 +157,7 @@ class SportDynamic:
                         odds = data[3].select('div > span')[0].text
                         odds = odds.replace('O ', 'o')
                         odds = odds.replace('U ', 'u')
+                        odds = odds.replace("½", ".5")
                     except:
                         odds = "NaN"
                     try:

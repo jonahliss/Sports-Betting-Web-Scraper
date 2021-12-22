@@ -120,6 +120,7 @@ class SportDynamic:
                     odds = row.find(class_='linesMl').find('a').text
                     odds = odds.replace('Ov ', 'o')
                     odds = odds.replace('Un ', 'u')
+                    odds = odds.replace("½", ".5")
                 except:
                     odds = "NaN"
                 try:
