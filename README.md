@@ -1,4 +1,5 @@
-Comparing the betting lines and spreads on Draft Kings with the following:
+Alerts users in live-time when the spreads, odds, or betting lines on 
+Draft Kings differs greatly with any of the following websites:
 1) www.ubet.ag
 2) www.sundaytilt.com
 3) www.action247.ag
