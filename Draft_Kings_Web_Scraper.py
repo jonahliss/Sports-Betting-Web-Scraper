@@ -61,38 +61,30 @@ class SportStatic:
     def sortData(self):
         for event in self.soup.select('div.parlay-card-10-a'):
             children = event.find_all('tr')
+            
+            teamName = "NaN"
+            spread = "NaN"
+            odds = "NaN"
+            moneyline = "NaN"
+            
             for child in children[1:]:
                 try:
                     team = child.find_all(class_='event-cell__name-text')[0].text
                 except:
-                    team = "NaN"
-                try:
-                    moneyline = child.find_all(class_='sportsbook-odds american no-margin default-color')[0].text
-                except:
-                    moneyline = "NaN"
-                try:
-                    temp = child.find_all(class_='sportsbook-outcome-body-wrapper')[1].text
-                    if (temp == moneyline):
-                        odds = "NaN"
-                    else:
-                        odds = temp
-                    spread = child.find_all(class_='sportsbook-outcome-body-wrapper')[0].text
-                except:
+                    pass
+                for i in range(3):
                     try:
-                        temp = child.find_all(class_='sportsbook-outcome-body-wrapper')[0].text 
-                        if (temp[0] == 'O' or temp[0] == 'U'):
-                            spread = "NaN"
+                        temp = child.find_all(class_='sportsbook-outcome-body-wrapper')[i].text
+                        
+                        if 'O' in temp or 'U' in temp:
                             odds = temp
-                        elif (temp == moneyline):
-                            spread = "NaN"
-                            odds = "NaN"
-                        else:
+                        elif (temp.count('+') + temp.count('-')) == 2:
                             spread = temp
-                            odds = "NaN"
+                        elif (temp.count('+') + temp.count('-')) == 1:
+                            moneyline = temp
                     except:
-                        spread = "NaN"
-                        odds = "NaN"
-
+                        pass
+            
                 self.teams_list.append(formatKey(team))
                 self.spreads_list.append(formatKey(spread))
                 self.odds_list.append(formatKey(odds))
