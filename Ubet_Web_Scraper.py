@@ -171,29 +171,21 @@ while True:
         if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
             print('NCAA Basketball')
             worksheet = sh.get_worksheet(1)
-            while len(worksheet.col_values(startingIndexCBB + 1)) > 0:
-                startingIndexCBB += 5
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
         elif 'nba' in bagOfWords:
             print('NBA')
             worksheet = sh.get_worksheet(2)
-            while len(worksheet.col_values(startingIndexNBA + 1)) > 0:
-                startingIndexNBA += 5
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
         elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
-            while len(worksheet.col_values(startingIndexCFB + 1)) > 0:
-                startingIndexCFB += 5
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
         elif 'nfl' in bagOfWords:
             print('NFL')
             worksheet = sh.get_worksheet(4)
-            while len(worksheet.col_values(startingIndexNFL + 1)) > 0:
-                startingIndexNFL += 5
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
         else:
