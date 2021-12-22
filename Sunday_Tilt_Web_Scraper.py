@@ -18,6 +18,9 @@ def getRange(index):
         return chr(64 + (index // 26)) + chr(65 + (index % 26))
     return chr(65 + index)
 
+
+# PURPOSE: removes all special chracters from the key
+# PURPOSE: makes the key lowercase
 def formatKey(key):
     key = key.lower()
     key = key.replace("(", "")
@@ -34,7 +37,9 @@ def formatKey(key):
     key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
+    key = key.replace("nan", "NaN")
     return key
+
 
 class SportDynamic:
     def __init__(self, url):
@@ -190,17 +195,16 @@ class SportDynamic:
         self.sortData()
 
 
-# %%
 gc = gspread.service_account(filename='credentials.json')
-print("Connected to Google Sheet")
-
 sh = gc.open("BettingScraper")
-#%%
+print("Connected to Google Sheet")
 
 website = SportDynamic('https://www.sundaytilt.com/')
 website.collectData()
 
-#%%
+
+startTime = time.perf_counter() 
+
 while True:
 
     print('Starting')
@@ -210,7 +214,7 @@ while True:
     startingIndexCFB = 1200
     startingIndexNFL = 1200
     startingIndex = 1200
-    # TODO purewage missing basketball in allbets dict
+
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = formatKey(key)
@@ -218,32 +222,57 @@ while True:
         if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
             print('NCAA Basketball')
             worksheet = sh.get_worksheet(1)
+            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
         elif 'nba' in bagOfWords:
             print('NBA')
             worksheet = sh.get_worksheet(2)
+            worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
-        elif ('ncaa' in bagOfWords or 'college' in bagOfWords) and 'football' in bagOfWords:
+        elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
+            worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
         elif 'nfl' in bagOfWords:
             print('NFL')
             worksheet = sh.get_worksheet(4)
+            worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
         else:
             continue
-        # TODO implement batch update
-        worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Sunday Tilt"]])
-        worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
-                         [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+            
+        try:
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+        except:
+            
+            failTime = time.perf_counter()
+            pause = 101 - (failTime - startTime)
+            
+            print('Pausing for', pause, 'seconds')
+            time.sleep(pause)
+            print('Resuming')
+            
+            gc = gspread.service_account(filename='credentials.json')
+            sh = gc.open("BettingScraper")
+            
+            worksheet = sh.get_worksheet(worksheetNumber)
+            
+            startTime = time.perf_counter() 
+            
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+
 
     print('Updated')
 
-    time.sleep(30)
-
     website.driver.find_element(By.CSS_SELECTOR, "div[data-wager-type='REFRESH']").click()
+    website.retrieveData()
+    website.sortData()
