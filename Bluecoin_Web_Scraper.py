@@ -34,7 +34,6 @@ def formatKey(key):
     key = key.replace("3q", "3rd quarter")
     key = key.replace("4q", "4th quarter")
     key = key.replace("bk", "basketball")
-    key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
@@ -94,6 +93,7 @@ class SportDynamic:
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
+        self.allBets = {}
         for event in self.soup.select('table > tbody')[1:41]:
             # try to find the event type in the first td element of the table
             try:
@@ -212,7 +212,7 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
         
-
+#%%
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 print("Connected to Google Sheet")
@@ -256,6 +256,7 @@ while True:
             worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
+        # TODO fix for props and futures
         elif 'nfl' in bagOfWords:
             print('NFL')
             worksheet = sh.get_worksheet(4)

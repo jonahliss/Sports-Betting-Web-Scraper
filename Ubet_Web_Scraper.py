@@ -34,7 +34,6 @@ def formatKey(key):
     key = key.replace("3q", "3rd quarter")
     key = key.replace("4q", "4th quarter")
     key = key.replace("bk", "basketball")
-    key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
@@ -67,7 +66,7 @@ class SportDynamic:
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEBASKETBALL'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_FOOTBALL'))
         leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEFOOTBALL'))
-        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_BASKETBALL'))
+        # leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_BASKETBALL'))
         for button in leagues:
             button = button.find_element(By.CSS_SELECTOR, '.divLeagueContainer > a')
             if button.text == "Check All":
@@ -83,6 +82,8 @@ class SportDynamic:
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
+        # array to watch for duplicates
+        self.allBets = {}
         for event in self.soup.select('div.line'):
             eventType = event.select('h4')[0].text
 
@@ -148,7 +149,7 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
 
-
+#%%
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 print("Connected to Google Sheet")
@@ -168,7 +169,7 @@ while True:
     startingIndexCFB = 1800
     startingIndexNFL = 1800
     startingIndex = 1800
-    
+
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = formatKey(key)
@@ -217,7 +218,7 @@ while True:
             sh = gc.open("BettingScraper")
             
             worksheet = sh.get_worksheet(worksheetNumber)
-            
+
             startTime = time.perf_counter() 
             
             worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])

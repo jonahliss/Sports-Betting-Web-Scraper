@@ -32,7 +32,6 @@ def formatKey(key):
     key = key.replace("3q", "3rd quarter")
     key = key.replace("4q", "4th quarter")
     key = key.replace("bk", "basketball")
-    key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
     return key
@@ -79,6 +78,7 @@ class SportDynamic:
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
+        self.allBets = {}
         for event in self.soup.find_all(class_='panel panel-transparent'):
             try:
                 eventType = event.find(class_='panel-title linesPanelTitle').text
@@ -174,17 +174,13 @@ print("Connected to Google Sheet")
 
 sh = gc.open("BettingScraper")
 
-# %%
 website = SportDynamic('https://www.purewage.com/')
-
-# %%
 website.collectData()
 # website.launchDriver()
 # website.enterDriver()
 #
 # #%%
 # website.retrieveData()
-# %%
 while True:
 
     print('Starting')

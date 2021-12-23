@@ -28,7 +28,6 @@ def formatKey(key):
     key = key.replace("3q", "3rd quarter")
     key = key.replace("4q", "4th quarter")
     key = key.replace("bk", "basketball")
-    key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
     key = key.replace("o\xa0", "o")
@@ -104,7 +103,7 @@ class SportStatic:
         self.retrieveData()
         self.sortData()
         
- 
+#%%
 gc = gspread.service_account(filename='credentials.json')
 print("Connected to Google Sheet")
 

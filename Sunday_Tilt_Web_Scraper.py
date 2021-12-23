@@ -34,7 +34,6 @@ def formatKey(key):
     key = key.replace("3q", "3rd quarter")
     key = key.replace("4q", "4th quarter")
     key = key.replace("bk", "basketball")
-    key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
@@ -102,6 +101,7 @@ class SportDynamic:
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
+        self.allBets = {}
         for event in website.soup.select('div.page-lines > div')[:-2]:
             # tries to find the "header-a" tags that hold the event types
             try:
@@ -195,7 +195,7 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
 
-
+#%%
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 print("Connected to Google Sheet")
@@ -248,7 +248,7 @@ while True:
             continue
             
         try:
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Sundaytilt"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
         except:
