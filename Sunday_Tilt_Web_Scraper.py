@@ -81,9 +81,9 @@ class SportDynamic:
         try:
             self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='BASKETBALL'] a").click()
             self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='HALFTIMES'] a").click()
+            self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='LIVE'] a").click()
         except:
             pass
-        self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='LIVE'] a").click()
         self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + Keys.HOME)
         time.sleep(1)
         # inserts the sport and league into the appropriate css locator
@@ -238,13 +238,10 @@ website = SportDynamic('https://www.sundaytilt.com/')
 website.collectData()
 
 #%%
-listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super bowl', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
-                'bears', 'bengals', 'browns', 'cowboys', 'broncos',
-                'lions', 'packers', 'texans', 'colts', 'jaguars',
-                'chiefs', 'chargers', 'rams', 'dolphins', 'vikings',
-                'patriots', 'saints', 'giants', 'jets', 'raiders',
-                'eagles', 'steelers', '49ers', 'seahawks',
-                'buccaneers', 'titans', 'team']
+listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
+                'bears', 'bengals', 'browns', 'cowboys', 'broncos', 'washington', 'lions', 'packers', 'texans', 'colts',
+                'chiefs', 'chargers', 'rams', 'dolphins', 'vikings', 'patriots', 'saints', 'giants', 'jets', 'raiders',
+                'eagles', 'steelers', '49ers', 'seahawks', 'buccaneers', 'titans', 'jaguars']
 
 listNBAteams = ['nba', 'eastern conference', 'western conference', 'celtics', 'nets', 'hornets', 'bulls', 'cavaliers',
                 'mavericks', 'heat', 'bucks', 'pacers', 'knicks', 'sixers', 'clippers', 'lakers', 'grizzlies',
