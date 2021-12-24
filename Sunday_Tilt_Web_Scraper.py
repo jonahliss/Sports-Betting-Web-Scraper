@@ -23,18 +23,30 @@ def getRange(index):
 # PURPOSE: makes the key lowercase
 def formatKey(key):
     key = key.lower()
+    key = key.replace("quarter", "q")
+    key = key.replace("half", "h")
+    key = key.replace("1st", "1")
+    key = key.replace("2nd", "2")
+    key = key.replace("3rd", "3")
+    key = key.replace("4th", "4")
+    key = key.replace("ncaa basketball", "ncaab")
+    key = key.replace("ncaa football", "ncaaf")
+    key = key.replace("college football", "ncaaf")
+    key = key.replace("margin of victory", "mov")
+    key = key.replace("scoring play", "sp")
+    key = key.replace("alternate lines", "al")
+    key = key.replace("game props", "gp")
+    key = key.replace("player props", "pp")
+    key = key.replace("live betting", "lb")
+    key = key.replace("2020/21", "")
     key = key.replace("(", "")
     key = key.replace(")", "")
-    key = key.replace(" - ", " ")
-    key = key.replace("1h", "1st half")
-    key = key.replace("2h", "2nd half")
-    key = key.replace("1q", "1st quarter")
-    key = key.replace("qtr", "quarter")
-    key = key.replace("2q", "2nd quarter")
-    key = key.replace("3q", "3rd quarter")
-    key = key.replace("4q", "4th quarter")
-    key = key.replace("bk", "basketball")
-    key = key.replace("fb", "football")
+    key = key.replace("-", "")
+    key = key.replace(" ", "")
+    key = key.replace("basketball", "")
+    key = key.replace("football", "")
+    key = key.replace("men", "")
+    key = key.replace("odds to win", "")
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
     return key
@@ -65,16 +77,28 @@ class SportDynamic:
 
     def navigateDriver(self):
         time.sleep(12)
-        self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='BASKETBALL'] a").click()
+        try:
+            self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='BASKETBALL'] a").click()
+            self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='HALFTIMES'] a").click()
+        except:
+            pass
+        self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='LIVE'] a").click()
         self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + Keys.HOME)
         time.sleep(1)
         # inserts the sport and league into the appropriate css locator
+        enter_live = self.driver.find_elements(By.CSS_SELECTOR,
+                                               "#{} > div > ul > li".format("LIVE"))
         enter_nfl = self.driver.find_elements(By.CSS_SELECTOR,
                                               "#{} > div > ul > li".format("FOOTBALL"))
         enter_nfl[0].find_element(By.CSS_SELECTOR, 'div').click()
         enter_nba = self.driver.find_elements(By.CSS_SELECTOR,
                                               "#{} > div > ul > li".format("BASKETBALL"))
 
+        for checkbox in enter_live:
+            try:
+                checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+            except:
+                pass
         for checkbox in enter_nfl:
             try:
                 if checkbox.get_attribute("data-sub-event") != None:
@@ -106,7 +130,8 @@ class SportDynamic:
             # tries to find the "header-a" tags that hold the event types
             try:
                 eventType = event.find(class_='header-a').div.span.text
-                eventType = eventType + " " + event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
+                eventType = eventType + " " + \
+                            event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
                 # creates a new list eventType in the allBets dictionary, which will hold
                 # dicts of the micro betting events
                 website.allBets[eventType] = []
@@ -178,6 +203,7 @@ class SportDynamic:
             tempEvent[eventName] = bettingData
             # append onto the list of events, the dict of the micro betting events
             website.allBets[eventType].append(tempEvent)
+
     def displayData(self, sport):
         df = pd.DataFrame()
         for event in self.allBets[sport]:
@@ -204,18 +230,19 @@ print("Connected to Google Sheet")
 website = SportDynamic('https://www.sundaytilt.com/')
 website.collectData()
 
-listNFLteams = ['cardinals', 'falcons', 'ravens', 'bills', 'panthers',
+#%%
+listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super bowl', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
                 'bears', 'bengals', 'browns', 'cowboys', 'broncos',
                 'lions', 'packers', 'texans', 'colts', 'jaguars',
                 'chiefs', 'chargers', 'rams', 'dolphins', 'vikings',
                 'patriots', 'saints', 'giants', 'jets', 'raiders',
                 'eagles', 'steelers', '49ers', 'seahawks',
-                'buccaneers', 'titans', 'team', 'afc', 'nfc', 'nfl', 'division', 'super bowl']
+                'buccaneers', 'titans', 'team']
 
-listNBAteams = ['celtics', 'nets', 'hornets', 'bulls', 'cavaliers', 'mavericks', 'heat', 'bucks', 'pacers', 'knicks',
-                'sixers', 'clippers', 'lakers', 'grizzlies', 'warriors', 'rockets', 'pacers', 'thunder', 'timberwolves',
-                'pelicans', 'magic', '76ers', 'suns', 'blazers', 'kings', 'spurs', 'raptors', 'jazz', 'wizards',
-                'pistons', 'nba', 'eastern conference', 'western conference']
+listNBAteams = ['nba', 'eastern conference', 'western conference', 'celtics', 'nets', 'hornets', 'bulls', 'cavaliers',
+                'mavericks', 'heat', 'bucks', 'pacers', 'knicks', 'sixers', 'clippers', 'lakers', 'grizzlies',
+                'warriors', 'rockets', 'pacers', 'thunder', 'timberwolves', 'pelicans', 'magic', '76ers', 'suns',
+                'blazers', 'kings', 'spurs', 'raptors', 'jazz', 'wizards', 'pistons']
 
 listCollegeTeams = ['ohio st', 'michigan', 'michigan st', 'penn st', 'wisconsin', 'northwestern', 'illinois', 'rutgers',
                     'maryland', 'indiana', 'iowa', 'nebraska', 'minnesota', 'purdue', 'alabama', 'lsu', 'texas a&m',
@@ -249,48 +276,51 @@ while True:
 
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        key = formatKey(key)
+        key = key.lower()
         bagOfWords = key.split()
         isCollege = False
         isNFL = False
         isNBA = False
         # checks if the event name is a college event
         for temp in bagOfWords:
-            if temp in listCollegeTeams:
-                isCollege = True
-            elif temp in listNFLteams:
+            if temp in listNFLteams:
                 isNFL = True
+                break
             elif temp in listNBAteams:
                 isNBA = True
-
-        if isCollege and 'basketball' in bagOfWords:
-            print('NCAA Basketball')
-            worksheet = sh.get_worksheet(1)
-            worksheetNumber = 1
-            startingIndexCBB += 5
-            startingIndex = startingIndexCBB
-        elif isNBA:
+                break
+            elif temp in listCollegeTeams:
+                isCollege = True
+                break
+        if isNBA:
             print('NBA')
             worksheet = sh.get_worksheet(2)
             worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
-        elif isCollege and 'football' in bagOfWords:
-            print('NCAA Football')
-            worksheet = sh.get_worksheet(3)
-            worksheetNumber = 3
-            startingIndexCFB += 5
-            startingIndex = startingIndexCFB
         elif isNFL:
             print('NFL')
             worksheet = sh.get_worksheet(4)
             worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
+        elif 'basketball' in bagOfWords or (isCollege and 'ncaab' in bagOfWords):
+            print('NCAA Basketball')
+            worksheet = sh.get_worksheet(1)
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+        elif 'football' in bagOfWords or (isCollege and 'ncaaf' in bagOfWords):
+            print('NCAA Football')
+            worksheet = sh.get_worksheet(3)
+            worksheetNumber = 3
+            startingIndexCFB += 5
+            startingIndex = startingIndexCFB
         else:
             continue
 
         try:
+            key = formatKey(key)
             worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Sundaytilt"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
@@ -310,7 +340,8 @@ while True:
 
             startTime = time.perf_counter()
 
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            key = formatKey(key)
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Sundaytilt"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
 
