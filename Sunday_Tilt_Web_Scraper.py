@@ -113,10 +113,17 @@ class SportDynamic:
                     checkbox.find_element(By.CSS_SELECTOR, 'div').click()
             except:
                 pass
-        # TODO click the checkboxes for accordian headings basketball
         for checkbox in enter_nba:
             try:
-                checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+                if checkbox.get_attribute("data-sub-event") != None:
+                    checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
+                    time.sleep(.5)
+                    nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
+                                                             "div[data-field='link-parent'] > div > ul > li")
+                    for nested in nested_checkbox:
+                        nested.find_element(By.CSS_SELECTOR, 'div').click()
+                else:
+                    checkbox.find_element(By.CSS_SELECTOR, 'div').click()
             except:
                 pass
 
@@ -131,8 +138,7 @@ class SportDynamic:
             # tries to find the "header-a" tags that hold the event types
             try:
                 eventType = event.find(class_='header-a').div.span.text
-                eventType = eventType + " " + \
-                            event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
+                eventType = eventType + " " + event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
                 # creates a new list eventType in the allBets dictionary, which will hold
                 # dicts of the micro betting events
                 website.allBets[eventType] = []
