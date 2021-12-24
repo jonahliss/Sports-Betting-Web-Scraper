@@ -23,19 +23,19 @@ def getRange(index):
 # Function to standardize text formatting across websites
 def formatKey(key):
     key = key.lower()
-    key = key.replace("quarter", "q")
-    key = key.replace("half", "h")
-    key = key.replace("1st", "1")
-    key = key.replace("2nd", "2")
-    key = key.replace("3rd", "3")
-    key = key.replace("4th", "4")
+    key = key.replace("(", "")
+    key = key.replace(")", "")
+    key = key.replace(" - ", " ")
+    key = key.replace("1h", "1st half")
+    key = key.replace("2h", "2nd half")
+    key = key.replace("1q", "1st quarter")
+    key = key.replace("qtr", "quarter")
+    key = key.replace("2q", "2nd quarter")
+    key = key.replace("3q", "3rd quarter")
+    key = key.replace("4q", "4th quarter")
     key = key.replace("bk", "basketball")
     key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
-    key = key.replace("(", "")
-    key = key.replace(")", "")
-    key = key.replace("-", "")
-    key = key.replace(" ", "")
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
     return key
@@ -155,17 +155,17 @@ class SportDynamic:
                         eventName = str(eventID) + ": " + teamName
                         isNew = False
                         prevID = eventID
-                        bettingData["team"].append(teamName)
-                        bettingData["spread"].append(spread)
-                        bettingData["odds"].append(odds)
-                        bettingData["moneyline"].append(moneyline)
+                        bettingData["team"].append(formatKey(teamName))
+                        bettingData["spread"].append(formatKey(spread))
+                        bettingData["odds"].append(formatKey(odds))
+                        bettingData["moneyline"].append(formatKey(moneyline))
                     # eventID has already been reached, so append the data onto list of all events
                     else:
                         isNew = True
-                        bettingData["team"].append(teamName)
-                        bettingData["spread"].append(spread)
-                        bettingData["odds"].append(odds)
-                        bettingData["moneyline"].append(moneyline)
+                        bettingData["team"].append(formatKey(teamName))
+                        bettingData["spread"].append(formatKey(spread))
+                        bettingData["odds"].append(formatKey(odds))
+                        bettingData["moneyline"].append(formatKey(moneyline))
                         tempEvent[eventName] = bettingData
                 # append onto the list of events, the dict of the micro betting events
                 self.allBets[eventType].append(tempEvent)
@@ -257,7 +257,7 @@ while True:
             worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
-        elif 'ncaa' in bagOfWords and ('football' or 'fb') in bagOfWords:
+        elif 'ncaa' in bagOfWords and ('football' in bagOfWords or 'fb' in bagOfWords):
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
             worksheetNumber = 3
@@ -273,7 +273,7 @@ while True:
             continue
             
         try:
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Bluecoin"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
         except:
@@ -292,7 +292,7 @@ while True:
             
             startTime = time.perf_counter() 
             
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Bluecoin"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
 
