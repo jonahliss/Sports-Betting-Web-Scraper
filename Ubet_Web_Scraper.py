@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
+# Function to help organize Google Sheet
 def getRange(index):
     if (index - 26) / math.pow(26, 2) >= 1:
         return chr(64 + (index // int(math.pow(26, 2)))) + chr(
@@ -19,8 +20,28 @@ def getRange(index):
     return chr(65 + index)
 
 
-# PURPOSE: removes all special chracters from the key
-# PURPOSE: makes the key lowercase
+# Function to classify HTML class text as a team's name, spread, odds, or moneyline
+def determineChild(child):
+    global teamName, spread, odds, moneyline
+    teamName, spread, odds, moneyline = 'NaN', 'NaN', 'NaN', 'NaN'
+    for i in range(4):
+        try:
+            temp = child.find_all('label')[i].text
+
+            if temp == child.find_all('label')[0].text:
+                teamName = temp
+            elif 'o' in temp or 'u' in temp:
+                odds = temp
+            elif (temp.count('+') + temp.count('-')) == 2:
+                spread = temp
+            elif (temp.count('+') + temp.count('-')) == 1:
+                moneyline = temp
+        except:
+            pass
+    return teamName, spread, odds, moneyline
+
+
+# Function to standardize text formatting across websites
 def formatKey(key):
     key = key.lower()
     key = key.replace("(", "")
@@ -34,15 +55,18 @@ def formatKey(key):
     key = key.replace("3q", "3rd quarter")
     key = key.replace("4q", "4th quarter")
     key = key.replace("bk", "basketball")
+    key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
     return key
 
 
+# Class to retrieve, sort, and return website data
 class SportDynamic:
-    def __init__(self, url):
+    def __init__(self, url, options):
         self.url = url
+        self.options = options
         self.soup = ""
         self.allBets = {}
 
@@ -61,12 +85,17 @@ class SportDynamic:
 
     def navigateDriver(self):
         self.driver.find_element(By.ID, "ctl00_lnkSports").click()
+        
         leagues = []
-        # leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_IN-HOUSELIVEWAGERING'))
-        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEBASKETBALL'))
-        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_FOOTBALL'))
-        leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEFOOTBALL'))
-        # leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_BASKETBALL'))
+        if 'CBB' in self.options:
+            leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEBASKETBALL'))
+        if 'NBA' in self.options:
+            leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_BASKETBALL'))
+        if 'CFB' in self.options:
+            leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEFOOTBALL'))
+        if 'NFL' in self.options:
+            leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_FOOTBALL'))
+        
         for button in leagues:
             button = button.find_element(By.CSS_SELECTOR, '.divLeagueContainer > a')
             if button.text == "Check All":
@@ -78,12 +107,10 @@ class SportDynamic:
 
     def retrieveData(self):
         html = self.driver.page_source
-        # self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
+        '''self.driver.quit()'''
 
     def sortData(self):
-        # array to watch for duplicates
-        self.allBets = {}
         for event in self.soup.select('div.line'):
             eventType = event.select('h4')[0].text
 
@@ -91,6 +118,7 @@ class SportDynamic:
                 self.allBets[eventType] = []
 
             tempEvent = {}
+            
             # gets the name of the event as a html tag
             eventName = event.select('div > div > h6')[0]
             tempEvent[eventName.text] = {}
@@ -99,28 +127,8 @@ class SportDynamic:
             bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
             children = event.find_all('div', class_='row py-4')
             
-            teamName = "NaN"
-            spread = "NaN"
-            odds = "NaN"
-            moneyline = "NaN"
-            
             for child in children[1:-1]:
-                for i in range(4):
-                    try:
-                        temp = child.find_all('label')[i].text
-                        
-                        if temp == child.find_all('label')[0].text:
-                            teamName = temp
-                        elif 'o' in temp or 'u' in temp:
-                            odds = temp
-                            odds = odds.replace("½", ".5")
-                        elif (temp.count('+') + temp.count('-')) == 2:
-                            spread = temp
-                        elif (temp.count('+') + temp.count('-')) == 1:
-                            moneyline = temp
-                    except:
-                        pass
-
+                determineChild(child)
                 bettingData["team"].append(formatKey(teamName))
                 bettingData["spread"].append(formatKey(spread))
                 bettingData["odds"].append(formatKey(odds))
@@ -148,17 +156,22 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         self.sortData()
+        
 
-#%%
+# Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
-print("Connected to Google Sheet")
 
-website = SportDynamic('https://ubet.ag/')
+
+# Determining sports and leageus to scrape
+options = input('CBB, NBA, CFB, NFL\nWhat data do you want to scrape? ')
+
+
+# Executing scraping process
+website = SportDynamic('https://ubet.ag/', options)
 website.collectData()
 
 startTime = time.perf_counter() 
-
 
 while True:
     
@@ -169,7 +182,7 @@ while True:
     startingIndexCFB = 1800
     startingIndexNFL = 1800
     startingIndex = 1800
-
+    
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = formatKey(key)
@@ -218,7 +231,7 @@ while True:
             sh = gc.open("BettingScraper")
             
             worksheet = sh.get_worksheet(worksheetNumber)
-
+            
             startTime = time.perf_counter() 
             
             worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
