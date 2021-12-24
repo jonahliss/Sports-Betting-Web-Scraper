@@ -1,7 +1,7 @@
 import math
 import time
-import gspread
 import requests
+import gspread
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
+# Function to help organize Google Sheet
 def getRange(index):
     if (index - 26) / math.pow(26, 2) >= 1:
         return chr(64 + (index // int(math.pow(26, 2)))) + chr(
@@ -19,8 +20,7 @@ def getRange(index):
     return chr(65 + index)
 
 
-# PURPOSE: removes all special chracters from the key
-# PURPOSE: makes the key lowercase
+# Function to standardize text formatting across websites
 def formatKey(key):
     key = key.lower()
     key = key.replace("(", "")
@@ -34,16 +34,19 @@ def formatKey(key):
     key = key.replace("3q", "3rd quarter")
     key = key.replace("4q", "4th quarter")
     key = key.replace("bk", "basketball")
+    key = key.replace("b ", "basketball")
     key = key.replace("fb", "football")
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
     return key
 
 
+# Class to retrieve, sort, and return website data
 class SportDynamic:
-    def __init__(self, url):
+    def __init__(self, url, options):
         self.allBets = {}
         self.url = url
+        self.options = options
         self.soup = ""
 
     def launchDriver(self):
@@ -69,7 +72,7 @@ class SportDynamic:
         menus = self.driver.find_elements(By.CSS_SELECTOR, "a[class='league_switch']")[:5]
         # open up all the menus
         for menu in menus:
-            if menu.text != "VIEW ALL":
+            if menu.text in self.options:
                 menu.click()
                 time.sleep(.5)
 
@@ -212,15 +215,19 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
         
-#%%
+
+# Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
-print("Connected to Google Sheet")
 
 
-website = SportDynamic('http://bluecoin.ag/core/mobile/')
+# Determining sports and leageus to scrape
+options = input('NCAA FOOTBALL, NBA, NFL\nWhat data do you want to scrape? ')
+
+
+# Executing scraping process
+website = SportDynamic('http://bluecoin.ag/core/mobile/', options)
 website.collectData()
-
 
 startTime = time.perf_counter() 
 
@@ -250,13 +257,12 @@ while True:
             worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
-        elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
+        elif 'ncaa' in bagOfWords and ('football' or 'fb') in bagOfWords:
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
             worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
-        # TODO fix for props and futures
         elif 'nfl' in bagOfWords:
             print('NFL')
             worksheet = sh.get_worksheet(4)
@@ -267,7 +273,7 @@ while True:
             continue
             
         try:
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Bluecoin"]])
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
         except:
@@ -286,7 +292,7 @@ while True:
             
             startTime = time.perf_counter() 
             
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Bluecoin"]])
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
 
