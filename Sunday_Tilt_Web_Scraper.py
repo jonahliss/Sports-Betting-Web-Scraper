@@ -45,6 +45,7 @@ class SportDynamic:
         self.url = url
         self.soup = ""
         self.allBets = {}
+        self.sport = ""
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -94,18 +95,18 @@ class SportDynamic:
             except:
                 pass
 
-
     def retrieveData(self):
         time.sleep(4)
         html = self.driver.page_source
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
-        self.allBets = {}
+        website.allBets = {}
         for event in website.soup.select('div.page-lines > div')[:-2]:
             # tries to find the "header-a" tags that hold the event types
             try:
                 eventType = event.find(class_='header-a').div.span.text
+                eventType = eventType + " " + event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
                 # creates a new list eventType in the allBets dictionary, which will hold
                 # dicts of the micro betting events
                 website.allBets[eventType] = []
@@ -177,7 +178,6 @@ class SportDynamic:
             tempEvent[eventName] = bettingData
             # append onto the list of events, the dict of the micro betting events
             website.allBets[eventType].append(tempEvent)
-
     def displayData(self, sport):
         df = pd.DataFrame()
         for event in self.allBets[sport]:
@@ -195,7 +195,8 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
 
-#%%
+
+# %%
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 print("Connected to Google Sheet")
@@ -203,8 +204,38 @@ print("Connected to Google Sheet")
 website = SportDynamic('https://www.sundaytilt.com/')
 website.collectData()
 
+listNFLteams = ['cardinals', 'falcons', 'ravens', 'bills', 'panthers',
+                'bears', 'bengals', 'browns', 'cowboys', 'broncos',
+                'lions', 'packers', 'texans', 'colts', 'jaguars',
+                'chiefs', 'chargers', 'rams', 'dolphins', 'vikings',
+                'patriots', 'saints', 'giants', 'jets', 'raiders',
+                'eagles', 'steelers', '49ers', 'seahawks',
+                'buccaneers', 'titans', 'team', 'afc', 'nfc', 'nfl', 'division', 'super bowl']
 
-startTime = time.perf_counter() 
+listNBAteams = ['celtics', 'nets', 'hornets', 'bulls', 'cavaliers', 'mavericks', 'heat', 'bucks', 'pacers', 'knicks',
+                'sixers', 'clippers', 'lakers', 'grizzlies', 'warriors', 'rockets', 'pacers', 'thunder', 'timberwolves',
+                'pelicans', 'magic', '76ers', 'suns', 'blazers', 'kings', 'spurs', 'raptors', 'jazz', 'wizards',
+                'pistons', 'nba', 'eastern conference', 'western conference']
+
+listCollegeTeams = ['ohio st', 'michigan', 'michigan st', 'penn st', 'wisconsin', 'northwestern', 'illinois', 'rutgers',
+                    'maryland', 'indiana', 'iowa', 'nebraska', 'minnesota', 'purdue', 'alabama', 'lsu', 'texas a&m',
+                    'mississippi st', 'ole miss', 'mississippi', 'arkansas', 'georgia', 'kentucky', 'vanderbilt',
+                    'tennessee', 'florida', 'missouri', 'south carolina', 's carolina', 'auburn', 'iowa st',
+                    'oklahoma st', 'texas', 'oklahoma', 'baylor', 'tcu', 'kansas st', 'kansas', 'texas tech',
+                    'w virginia', 'west virginia', 'notre dame', 'clemson', 'miami', 'florida st', 'georgia tech',
+                    'north carolina', 'n carolina', 'unc', 'nc state', 'va tech', 'virginia', 'pittsburgh',
+                    'boston college', 'boston coll', 'syracuse', 'wake forest', 'duke', 'louisville', 'washington',
+                    'washington st', 'oregon', 'oregon st', 'ucla', 'cal', 'usc', 'stanford', 'asu', 'arizona st',
+                    'arizona', 'utah', 'colorado', 'cincinnati', 'w michigan', 'c michigan', 'e michigan', 'memphis',
+                    'houston', 'ucf', 'c florida', 'miami ohio', 'miami oh', 'w kentucky', 'nevada', 'boise st',
+                    'wyoming', 'fresno st', 'sdsu', 'wichita st', 'gonzaga', 'villanova', 'georgetown', 'seton hall',
+                    'creighton', 'butler', 'depaul', 'st johns', 'uconn', 'connecticut', 'liberty', 'dayton',
+                    'marquette', 'saint louis', 'providence', 'belmont', 'buffalo', 'byu', 'brigham young',
+                    'colorado st', 'louisiana tech', 'smu', 'drake', 'loyola chicago', 'miami florida', 'richmond',
+                    'saint johns', 'saint bonaventure', 'saint marys', 'pepperdine', 'uab', 'usf', 'utah st', 'vcu',
+                    'xavier', 'marquette', 'san francisco', 'hawaii', 'unlv', 'ncaa', 'college', 'ncaaf', 'ncaab']
+
+startTime = time.perf_counter()
 
 while True:
 
@@ -220,25 +251,37 @@ while True:
         ubdfNFL = website.displayData(key)
         key = formatKey(key)
         bagOfWords = key.split()
-        if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
+        isCollege = False
+        isNFL = False
+        isNBA = False
+        # checks if the event name is a college event
+        for temp in bagOfWords:
+            if temp in listCollegeTeams:
+                isCollege = True
+            elif temp in listNFLteams:
+                isNFL = True
+            elif temp in listNBAteams:
+                isNBA = True
+
+        if isCollege and 'basketball' in bagOfWords:
             print('NCAA Basketball')
             worksheet = sh.get_worksheet(1)
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
-        elif 'nba' in bagOfWords:
+        elif isNBA:
             print('NBA')
             worksheet = sh.get_worksheet(2)
             worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
-        elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
+        elif isCollege and 'football' in bagOfWords:
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
             worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
-        elif 'nfl' in bagOfWords:
+        elif isNFL:
             print('NFL')
             worksheet = sh.get_worksheet(4)
             worksheetNumber = 4
@@ -246,31 +289,30 @@ while True:
             startingIndex = startingIndexNFL
         else:
             continue
-            
+
         try:
             worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Sundaytilt"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
         except:
-            
+
             failTime = time.perf_counter()
             pause = 101 - (failTime - startTime)
-            
+
             print('Pausing for', pause, 'seconds')
             time.sleep(pause)
             print('Resuming')
-            
+
             gc = gspread.service_account(filename='credentials.json')
             sh = gc.open("BettingScraper")
-            
+
             worksheet = sh.get_worksheet(worksheetNumber)
-            
-            startTime = time.perf_counter() 
-            
+
+            startTime = time.perf_counter()
+
             worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
-
 
     print('Updated')
 
