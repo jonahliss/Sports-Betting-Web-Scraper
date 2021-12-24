@@ -32,6 +32,7 @@ def formatKey(key):
 
 # Function to classify HTML class text as a team's name, spread, odds, or moneyline
 def determineChild(child):
+    global teamName, spread, odds, moneyline
     teamName, spread, odds, moneyline = 'NaN', 'NaN', 'NaN', 'NaN'
     try:
         teamName = child.find_all(class_='event-cell__name-text')[0].text
