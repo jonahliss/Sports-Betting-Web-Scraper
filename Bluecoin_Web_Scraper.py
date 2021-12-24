@@ -273,7 +273,7 @@ while True:
             continue
             
         try:
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Bluecoin"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
         except:
@@ -292,7 +292,7 @@ while True:
             
             startTime = time.perf_counter() 
             
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Ubet"]])
+            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Bluecoin"]])
             worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
 
