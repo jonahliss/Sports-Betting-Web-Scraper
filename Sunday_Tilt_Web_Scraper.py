@@ -327,9 +327,11 @@ while True:
 
         try:
             key = formatKey(key)
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Sundaytilt"]])
-            worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
-                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+            dictEvent = {getRange(startingIndex - 5) + str(1), [[key], ["Sundaytilt"]]}
+            combinationDict.append(dictEvent)
+            dictEvent = {getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
+            combinationDict.append(dictEvent)
         except:
 
             failTime = time.perf_counter()
