@@ -10,23 +10,34 @@ from webdriver_manager.chrome import ChromeDriverManager
 # Function to standardize text formatting across websites
 def formatKey(key):
     key = key.lower()
+    key = key.replace("quarters", "1q")
     key = key.replace("quarter", "q")
+    key = key.replace("qtr", "q")
     key = key.replace("half", "h")
     key = key.replace("1st", "1")
+    key = key.replace("first", "1")
     key = key.replace("2nd", "2")
     key = key.replace("3rd", "3")
     key = key.replace("4th", "4")
-    key = key.replace("bk", "basketball")
-    key = key.replace("b ", "basketball")
-    key = key.replace("fb", "football")
+    key = key.replace("ncaa basketball", "ncaab")
+    key = key.replace("ncaa football", "ncaaf")
+    key = key.replace("college football", "ncaaf")
+    key = key.replace("margin of victory", "mov")
+    key = key.replace("winning margin", "mov")
+    key = key.replace("scoring play", "sp")
+    key = key.replace("points", "p")
+    key = key.replace("basketball", "b")
+    key = key.replace("football", "f")
+    key = key.replace("@", "vs")
+    key = key.replace("2021", "")
+    key = key.replace("2022", "")
+    key = key.replace("the ", "")
     key = key.replace("(", "")
     key = key.replace(")", "")
     key = key.replace("-", "")
     key = key.replace(" ", "")
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
-    key = key.replace("o\xa0", "o")
-    key = key.replace("u\xa0", "u")
     return key
 
 
@@ -102,36 +113,36 @@ sh = gc.open("BettingScraper")
 
 # Initializing data used to execute scraping process
 scraping_list_NFL = [[4,'A1','nfl','football/88670561','B:E'],
-                 [4,'F1','nfl 1st half','football/88670561?category=halves&subcategory=1st-half','G:J'],
-                 [4,'K1','nfl 2nd half','football/88670561?category=halves&subcategory=2nd-half','L:O'],
-                 [4,'P1','nfl 1st quarter','football/88670561?category=quarters&subcategory=1st-quarter','Q:T'],
-                 [4,'U1','nfl 2nd quarter','football/88670561?category=quarters&subcategory=2nd-quarter','V:Y'],
-                 [4,'Z1','nfl 3rd quarter','football/88670561?category=quarters&subcategory=3rd-quarter','AA:AD'],
-                 [4,'AE1','nfl 4th quarter','football/88670561?category=quarters&subcategory=4th-quarter','AF:AI']]
+                 [4,'F1','nfl1h','football/88670561?category=halves&subcategory=1st-half','G:J'],
+                 [4,'K1','nfl2h','football/88670561?category=halves&subcategory=2nd-half','L:O'],
+                 [4,'P1','nfl1q','football/88670561?category=quarters&subcategory=1st-quarter','Q:T'],
+                 [4,'U1','nfl2q','football/88670561?category=quarters&subcategory=2nd-quarter','V:Y'],
+                 [4,'Z1','nfl3q','football/88670561?category=quarters&subcategory=3rd-quarter','AA:AD'],
+                 [4,'AE1','nfl4q','football/88670561?category=quarters&subcategory=4th-quarter','AF:AI']]
                  
-scraping_list_CFB = [[3,'A1','ncaa football','football/88670775','B:E'],
-                 [3,'F1','ncaa football 1st half','football/88670775?category=halves&subcategory=1st-half','G:J'],
-                 [3,'K1','ncaa football 2nd half','football/88670775?category=halves&subcategory=2nd-half','L:O'],
-                 [3,'P1','ncaa football 1st quarter','football/88670775?category=quarters&subcategory=1st-quarter','Q:T'],
-                 [3,'U1','ncaa football 2nd quarter','football/88670775?category=quarters&subcategory=2nd-quarter','V:Y'],
-                 [3,'Z1','ncaa football 3rd quarter','football/88670775?category=quarters&subcategory=3rd-quarter','AA:AD'],
-                 [3,'AE1','ncaa football 4th quarter','football/88670775?category=quarters&subcategory=4th-quarter','AF:AI']]
+scraping_list_CFB = [[3,'A1','ncaaf','football/88670775','B:E'],
+                 [3,'F1','ncaaf1h','football/88670775?category=halves&subcategory=1st-half','G:J'],
+                 [3,'K1','ncaaf2h','football/88670775?category=halves&subcategory=2nd-half','L:O'],
+                 [3,'P1','ncaaf1q','football/88670775?category=quarters&subcategory=1st-quarter','Q:T'],
+                 [3,'U1','ncaaf2q','football/88670775?category=quarters&subcategory=2nd-quarter','V:Y'],
+                 [3,'Z1','ncaaf3q','football/88670775?category=quarters&subcategory=3rd-quarter','AA:AD'],
+                 [3,'AE1','ncaaf4q','football/88670775?category=quarters&subcategory=4th-quarter','AF:AI']]
                  
 scraping_list_NBA = [[2,'A1','nba','basketball/88670846','B:E'],
-                 [2,'F1','nba 1st half','basketball/88670846?category=halves&subcategory=1st-half','G:J'],
-                 [2,'K1','nba 2nd half','basketball/88670846?category=halves&subcategory=2nd-half','L:O'],
-                 [2,'P1','nba 1st quarter','basketball/88670846?category=quarters&subcategory=1st-quarter','Q:T'],
-                 [2,'U1','nba 2nd quarter','basketball/88670846?category=quarters&subcategory=2nd-quarter','V:Y'],
-                 [2,'Z1','nba 3rd quarter','basketball/88670846?category=quarters&subcategory=3rd-quarter','AA:AD'],
-                 [2,'AE1','nba 4th quarter','basketball/88670846?category=quarters&subcategory=4th-quarter','AF:AI']]
+                 [2,'F1','nba1h','basketball/88670846?category=halves&subcategory=1st-half','G:J'],
+                 [2,'K1','nba2h','basketball/88670846?category=halves&subcategory=2nd-half','L:O'],
+                 [2,'P1','nba1q','basketball/88670846?category=quarters&subcategory=1st-quarter','Q:T'],
+                 [2,'U1','nba2q','basketball/88670846?category=quarters&subcategory=2nd-quarter','V:Y'],
+                 [2,'Z1','nba3q','basketball/88670846?category=quarters&subcategory=3rd-quarter','AA:AD'],
+                 [2,'AE1','nba4q','basketball/88670846?category=quarters&subcategory=4th-quarter','AF:AI']]
                  
-scraping_list_CBB = [[1,'A1','ncaa basketball','basketball/88670771','B:E',1],
-                 [1,'F1','ncaa basketball 1st half','basketball/88670771?category=halves&subcategory=1st-half','G:J'],
-                 [1,'K1','ncaa basketball 2nd half','basketball/88670771?category=halves&subcategory=2nd-half','L:O'],
-                 [1,'P1','ncaa basketball 1st quarter','basketball/88670771?category=quarters&subcategory=1st-quarter','Q:T'],
-                 [1,'U1','ncaa basketball 2nd quarter','basketball/88670771?category=quarters&subcategory=2nd-quarter','V:Y'],
-                 [1,'Z1','ncaa basketball 3rd quarter','basketball/88670771?category=quarters&subcategory=3rd-quarter','AA:AD'],
-                 [1,'AE1','ncaa basketball 4th quarter','basketball/88670771?category=quarters&subcategory=4th-quarter','AF:AI']]
+scraping_list_CBB = [[1,'A1','ncaab','basketball/88670771','B:E',1],
+                 [1,'F1','ncaab1h','basketball/88670771?category=halves&subcategory=1st-half','G:J'],
+                 [1,'K1','ncaab2h','basketball/88670771?category=halves&subcategory=2nd-half','L:O'],
+                 [1,'P1','ncaab1q','basketball/88670771?category=quarters&subcategory=1st-quarter','Q:T'],
+                 [1,'U1','ncaab2q','basketball/88670771?category=quarters&subcategory=2nd-quarter','V:Y'],
+                 [1,'Z1','ncaab3q','basketball/88670771?category=quarters&subcategory=3rd-quarter','AA:AD'],
+                 [1,'AE1','ncaab4q','basketball/88670771?category=quarters&subcategory=4th-quarter','AF:AI']]
 
 
 # Determining sports and leageus to scrape
