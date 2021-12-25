@@ -240,7 +240,8 @@ while True:
     startingIndexCFB = 2400
     startingIndexNFL = 2400
     startingIndex = 2400
-    
+    combinationDict = []
+
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = formatKey(key)
@@ -292,9 +293,11 @@ while True:
             
             startTime = time.perf_counter() 
             
-            worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Bluecoin"]])
-            worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
-                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
+            dictEvent = {getRange(startingIndex - 5) + str(1), [[key], ["Bluecoin"]]}
+            combinationDict.append(dictEvent)
+            dictEvent = {getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
+            combinationDict.append(dictEvent)
 
 
     print('Updated')

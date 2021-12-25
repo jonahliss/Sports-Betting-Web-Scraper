@@ -308,6 +308,7 @@ while True:
     startingIndexCFB = 600
     startingIndexNFL = 600
     startingIndex = 600
+    combinationDict = []
     # TODO purewage missing basketball in allbets dict
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
@@ -354,19 +355,13 @@ while True:
             startingIndex = startingIndexCFB
         else:
             continue
-        # TODO implement batch update
         key = formatKey(key)
-        worksheet.update(getRange(startingIndex - 5) + str(1), [[key], ["Purewage"]])
-        worksheet.update(getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
-                         [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist())
-        worksheet.format(getRange(startingIndex - 5) + ':' + getRange(startingIndex - 1), {
-            "backgroundColor": {
-                "red": 0.25,
-                "green": 0.5,
-                "blue": 0.95
-            },
-        })
-
+        dictEvent = {"range": getRange(startingIndex - 5) + str(1), "values": [[key], ["Purewage"]]}
+        combinationDict.append(dictEvent)
+        dictEvent = {"range": getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
+                     "values": [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
+        combinationDict.append(dictEvent)
+    worksheet.batch_update(combinationDict)
     print('Updated')
 
     website.driver.find_element(By.XPATH, '//a[text()="Refresh Lines"]').click()
