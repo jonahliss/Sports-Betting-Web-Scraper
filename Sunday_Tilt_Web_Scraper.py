@@ -352,6 +352,7 @@ while True:
             dictEvent = {getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
             combinationDict.append(dictEvent)
+    worksheet.batch_update(combinationDict)
     print('Updated')
 
     website.driver.find_element(By.CSS_SELECTOR, "div[data-wager-type='REFRESH']").click()

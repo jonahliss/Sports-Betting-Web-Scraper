@@ -299,7 +299,7 @@ while True:
                              [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
             combinationDict.append(dictEvent)
 
-
+    worksheet.batch_update(combinationDict)
     print('Updated')
     
     website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
