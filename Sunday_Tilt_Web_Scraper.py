@@ -38,6 +38,7 @@ def formatKey(key):
     key = key.replace("game props", "gp")
     key = key.replace("player props", "pp")
     key = key.replace("live betting", "lb")
+    key = key.replace("the ", "")
     key = key.replace("2020/21", "")
     key = key.replace("2021/22", "")
     key = key.replace("(", "")

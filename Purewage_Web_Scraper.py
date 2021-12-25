@@ -23,8 +23,10 @@ def formatKey(key):
     key = key.lower()
     key = key.replace("quarters", "1q")
     key = key.replace("quarter", "q")
+    key = key.replace("qtr", "q")
     key = key.replace("half", "h")
     key = key.replace("1st", "1")
+    key = key.replace("first", "1")
     key = key.replace("2nd", "2")
     key = key.replace("3rd", "3")
     key = key.replace("4th", "4")
@@ -32,8 +34,15 @@ def formatKey(key):
     key = key.replace("ncaa football", "ncaaf")
     key = key.replace("college football", "ncaaf")
     key = key.replace("margin of victory", "mov")
+    key = key.replace("winning margin", "mov")
+    key = key.replace("scoring play", "sp")
+    key = key.replace("points", "p")
     key = key.replace("basketball", "b")
     key = key.replace("football", "f")
+    key = key.replace("@", "vs")
+    key = key.replace("2021", "")
+    key = key.replace("2022", "")
+    key = key.replace("the ", "")
     key = key.replace("(", "")
     key = key.replace(")", "")
     key = key.replace("-", "")
@@ -86,15 +95,6 @@ class SportDynamic:
     def sortData(self):
         self.allBets = {}
         for event in self.soup.find_all(class_='panel panel-transparent'):
-            try:
-                eventType = event.find(class_='panel-title linesPanelTitle').text
-                # creates a new list eventType in the allBets dictionary, which will hold
-                # dicts of the micro betting events
-                self.allBets[eventType] = []
-            # if no attribute of event is found, then
-            # set attr to empty string
-            except:
-                pass
 
             # create a temporary dictionary to hold the event
             tempEvent = {}
@@ -104,54 +104,138 @@ class SportDynamic:
             prevID = -1
             isNew = True
             # TODO fix for futures, not just h2h matchups
-            for row in panelRows:
-                # gets the eventID
-                try:
-                    eventID = row.find(class_='linesRot').text
-                except:
-                    # if eventID not found, it is not a valid event
-                    continue
-                try:
-                    teamName = row.find(class_='linesTeam').select('span')[1].next
-                    teamName = str(teamName)
-                    teamName = teamName.strip()
-                    teamName = teamName.lower()
-                except:
-                    teamName = "NaN"
-                try:
-                    spread = row.find(class_='linesSpread').find('a').text
-                except:
-                    spread = "NaN"
-                try:
-                    odds = row.find(class_='linesMl').find('a').text
-                    odds = odds.replace('Ov ', 'o')
-                    odds = odds.replace('Un ', 'u')
-                    odds = odds.replace("½", ".5")
-                except:
-                    odds = "NaN"
-                try:
-                    moneyline = row.find(class_='linesTotal').find('a').text
-                except:
-                    moneyline = "NaN"
+            # checks first header row to see if it is a prop, future, or h2h matchup
+            # 0 is prop, 1 is future, 2 is h2h
+            gameType = -1
+            numHeaders = len(panelRows[0].select('div'))
+            if numHeaders >= 6:
+                gameType = 2
+            elif numHeaders == 5:
+                gameType = 1
+            else:
+                gameType = 0
 
-                # if the eventID is "new", create new eventName, and reset the bettingData
-                if int(eventID) - 1 != prevID and isNew:
+            try:
+                if gameType == 2:
+                    eventType = event.find(class_='panel-title linesPanelTitle').text
+                    # creates a new list eventType in the allBets dictionary, which will hold
+                    # dicts of the micro betting events
+                elif gameType == 1:
+                    eventType = event.find('h6').text
+                elif gameType == 0:
+                    eventType = event.find_all(class_='row gameDate')[1].text
+                self.allBets[eventType] = []
+            # if no attribute of event is found, then
+            # set attr to empty string
+            except:
+                pass
+
+            # finds the betting data for the h2h matchups
+            if gameType == 2:
+                for row in panelRows:
+                    # gets the eventID
+                    try:
+                        eventID = row.find(class_='linesRot').text
+                    except:
+                        # if eventID not found, it is not a valid event
+                        continue
+                    try:
+                        teamName = row.find(class_='linesTeam').select('span')[1].next
+                        teamName = str(teamName)
+                        teamName = teamName.strip()
+                        teamName = teamName.lower()
+                    except:
+                        teamName = "NaN"
+                    try:
+                        spread = row.find(class_='linesSpread').find('a').text
+                    except:
+                        spread = "NaN"
+                    try:
+                        odds = row.find(class_='linesMl').find('a').text
+                        odds = odds.replace('Ov ', 'o')
+                        odds = odds.replace('Un ', 'u')
+                        odds = odds.replace("½", ".5")
+                    except:
+                        odds = "NaN"
+                    try:
+                        moneyline = row.find(class_='linesTotal').find('a').text
+                    except:
+                        moneyline = "NaN"
+
+                    # if the eventID is "new", create new eventName, and reset the bettingData
+                    if int(eventID) - 1 != prevID and isNew:
+                        bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
+                        eventName = str(eventID) + ": " + teamName
+                        isNew = False
+                        prevID = eventID
+                        bettingData["team"].append(teamName)
+                        bettingData["spread"].append(spread)
+                        bettingData["odds"].append(odds)
+                        bettingData["moneyline"].append(moneyline)
+                    # eventID has already been reached, so append the data onto list of all events
+                    else:
+                        isNew = True
+                        bettingData["team"].append(teamName)
+                        bettingData["spread"].append(spread)
+                        bettingData["odds"].append(odds)
+                        bettingData["moneyline"].append(moneyline)
+                        tempEvent[eventName] = bettingData
+            # finds betting data for futures
+            elif gameType == 1:
+                futuresD = event.find(class_='panel-body').find_all(class_='betting-lines-container tnt row')
+                for row in event.find(class_='panel-body').find_all(class_='betting-lines-container tnt row'):
+                    # gets the eventID
+                    try:
+                        teamName = row.div.div.select('div.betting-lines-line-name-prop')[0].span.text
+                        teamName = str(teamName)
+                        teamName = teamName.replace(eventType, '')
+                        teamName = teamName.strip()
+                        teamName = teamName.lower()
+                        eventName = teamName
+                    except:
+                        teamName = "NaN"
+                        eventName = "NaN"
+                    try:
+                        moneyline = row.div.div.select('div.betting-lines-line-line-ml')[0].a.text
+                    except:
+                        moneyline = "NaN"
+                    spread = "NaN"
+                    odds = "NaN"
                     bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
-                    eventName = str(eventID) + ": " + teamName
-                    isNew = False
-                    prevID = eventID
-                    bettingData["team"].append(teamName)
-                    bettingData["spread"].append(spread)
-                    bettingData["odds"].append(odds)
-                    bettingData["moneyline"].append(moneyline)
-                # eventID has already been reached, so append the data onto list of all events
-                else:
-                    isNew = True
                     bettingData["team"].append(teamName)
                     bettingData["spread"].append(spread)
                     bettingData["odds"].append(odds)
                     bettingData["moneyline"].append(moneyline)
                     tempEvent[eventName] = bettingData
+            # finds betting data for props
+            elif gameType == 0:
+                propsD = panelRows
+                for row in panelRows:
+                    # gets the eventID
+                    try:
+                        teamName = row.find(class_='linesTeam').text
+                        teamName = str(teamName)
+                        teamName = teamName.strip()
+                        teamName = teamName.lower()
+                        eventName = teamName
+                    except:
+                        teamName = "NaN"
+                        eventName = "NaN"
+                    try:
+                        moneyline = row.find(class_='linesSpread').find('a').text
+                    except:
+                        moneyline = "NaN"
+                    spread = "NaN"
+                    odds = "NaN"
+                    bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
+                    bettingData["team"].append(teamName)
+                    bettingData["spread"].append(spread)
+                    bettingData["odds"].append(odds)
+                    bettingData["moneyline"].append(moneyline)
+                    tempEvent[eventName] = bettingData
+            else:
+                print("Error: gameType not recognized")
+                # return
 
             # append onto the list of events, the dict of the micro betting events
             self.allBets[eventType].append(tempEvent)
@@ -185,154 +269,6 @@ website.collectData()
 # website.launchDriver()
 # website.enterDriver()
 #
-#%%
-website.allBets = {}
-for event in website.soup.find_all(class_='panel panel-transparent'):
-
-    # create a temporary dictionary to hold the event
-    tempEvent = {}
-    panelRows = event.find(class_='panel-body').select('div.row')
-
-    # variables to help identify new team matchups
-    prevID = -1
-    isNew = True
-    # TODO fix for futures, not just h2h matchups
-    # checks first header row to see if it is a prop, future, or h2h matchup
-    # 0 is prop, 1 is future, 2 is h2h
-    gameType = -1
-    numHeaders = len(panelRows[0].select('div'))
-    if numHeaders >= 6:
-        gameType = 2
-    elif numHeaders == 5:
-        gameType = 1
-    else:
-        gameType = 0
-
-    try:
-        if gameType == 2:
-            eventType = event.find(class_='panel-title linesPanelTitle').text
-            # creates a new list eventType in the allBets dictionary, which will hold
-            # dicts of the micro betting events
-        elif gameType == 1:
-            eventType = event.find('h6').text
-        elif gameType == 0:
-            eventType = event.find_all(class_='row gameDate')[1].text
-        website.allBets[eventType] = []
-    # if no attribute of event is found, then
-    # set attr to empty string
-    except:
-        pass
-
-    # finds the betting data for the h2h matchups
-    if gameType == 2:
-        for row in panelRows:
-            # gets the eventID
-            try:
-                eventID = row.find(class_='linesRot').text
-            except:
-                # if eventID not found, it is not a valid event
-                continue
-            try:
-                teamName = row.find(class_='linesTeam').select('span')[1].next
-                teamName = str(teamName)
-                teamName = teamName.strip()
-                teamName = teamName.lower()
-            except:
-                teamName = "NaN"
-            try:
-                spread = row.find(class_='linesSpread').find('a').text
-            except:
-                spread = "NaN"
-            try:
-                odds = row.find(class_='linesMl').find('a').text
-                odds = odds.replace('Ov ', 'o')
-                odds = odds.replace('Un ', 'u')
-                odds = odds.replace("½", ".5")
-            except:
-                odds = "NaN"
-            try:
-                moneyline = row.find(class_='linesTotal').find('a').text
-            except:
-                moneyline = "NaN"
-
-            # if the eventID is "new", create new eventName, and reset the bettingData
-            if int(eventID) - 1 != prevID and isNew:
-                bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
-                eventName = str(eventID) + ": " + teamName
-                isNew = False
-                prevID = eventID
-                bettingData["team"].append(teamName)
-                bettingData["spread"].append(spread)
-                bettingData["odds"].append(odds)
-                bettingData["moneyline"].append(moneyline)
-            # eventID has already been reached, so append the data onto list of all events
-            else:
-                isNew = True
-                bettingData["team"].append(teamName)
-                bettingData["spread"].append(spread)
-                bettingData["odds"].append(odds)
-                bettingData["moneyline"].append(moneyline)
-                tempEvent[eventName] = bettingData
-    # finds betting data for futures
-    elif gameType == 1:
-        futuresD = event.find(class_='panel-body').find_all(class_='betting-lines-container tnt row')
-        for row in event.find(class_='panel-body').find_all(class_='betting-lines-container tnt row'):
-            # gets the eventID
-            try:
-                teamName = row.div.div.select('div.betting-lines-line-name-prop')[0].span.text
-                teamName = str(teamName)
-                teamName = teamName.replace(eventType, '')
-                teamName = teamName.strip()
-                teamName = teamName.lower()
-                eventName = teamName
-            except:
-                teamName = "NaN"
-                eventName = "NaN"
-            try:
-                moneyline = row.div.div.select('div.betting-lines-line-line-ml')[0].a.text
-            except:
-                moneyline = "NaN"
-            spread = "NaN"
-            odds = "NaN"
-            bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
-            bettingData["team"].append(teamName)
-            bettingData["spread"].append(spread)
-            bettingData["odds"].append(odds)
-            bettingData["moneyline"].append(moneyline)
-            tempEvent[eventName] = bettingData
-    # finds betting data for props
-    elif gameType == 0:
-        propsD = panelRows
-        for row in panelRows:
-            # gets the eventID
-            try:
-                teamName = row.find(class_='linesTeam').text
-                teamName = str(teamName)
-                teamName = teamName.strip()
-                teamName = teamName.lower()
-                eventName = teamName
-            except:
-                teamName = "NaN"
-                eventName = "NaN"
-            try:
-                moneyline = row.find(class_='linesSpread').find('a').text
-            except:
-                moneyline = "NaN"
-            spread = "NaN"
-            odds = "NaN"
-            bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
-            bettingData["team"].append(teamName)
-            bettingData["spread"].append(spread)
-            bettingData["odds"].append(odds)
-            bettingData["moneyline"].append(moneyline)
-            tempEvent[eventName] = bettingData
-    else:
-        print("Error: gameType not recognized")
-        # return
-
-    # append onto the list of events, the dict of the micro betting events
-    website.allBets[eventType].append(tempEvent)
-
 #%%
 listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
                 'bears', 'bengals', 'browns', 'cowboys', 'broncos', 'washington', 'lions', 'packers', 'texans', 'colts',
