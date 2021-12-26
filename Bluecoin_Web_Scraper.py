@@ -258,7 +258,7 @@ while True:
                 worksheet = sh.get_worksheet(1)
             except:
                 failTime = time.perf_counter()
-                pause = 101 - (failTime - startTime)
+                pause = abs(101 - (failTime - startTime))
                 print('Pausing for', pause, 'seconds')
                 time.sleep(pause)
                 print('Resuming')
@@ -274,7 +274,7 @@ while True:
                 worksheet = sh.get_worksheet(2)
             except:
                 failTime = time.perf_counter()
-                pause = 101 - (failTime - startTime)
+                pause = abs(101 - (failTime - startTime))
                 print('Pausing for', pause, 'seconds')
                 time.sleep(pause)
                 print('Resuming')
@@ -290,7 +290,7 @@ while True:
                 worksheet = sh.get_worksheet(3)
             except:
                 failTime = time.perf_counter()
-                pause = 101 - (failTime - startTime)
+                pause = abs(101 - (failTime - startTime))
                 print('Pausing for', pause, 'seconds')
                 time.sleep(pause)
                 print('Resuming')
@@ -306,7 +306,7 @@ while True:
                 worksheet = sh.get_worksheet(4)
             except:
                 failTime = time.perf_counter()
-                pause = 101 - (failTime - startTime)
+                pause = abs(101 - (failTime - startTime))
                 print('Pausing for', pause, 'seconds')
                 time.sleep(pause)
                 print('Resuming')
