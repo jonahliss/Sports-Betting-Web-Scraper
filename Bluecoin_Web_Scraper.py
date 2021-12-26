@@ -92,8 +92,8 @@ class SportDynamic:
 
     def retrieveData(self):
         html = self.driver.page_source
-        # self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
+        '''self.driver.quit()'''
 
     def sortData(self):
         self.allBets = {}
@@ -215,14 +215,20 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
         
-#%%
+
 # Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 
 
 # Determining sports and leageus to scrape
-options = input('NCAA FOOTBALL, NBA, NFL\nWhat data do you want to scrape? ')
+options = input('CFB, NFL, CBB, NBA\nWhat data do you want to scrape? ')
+
+if 'CFB' in options:
+    options += 'COLLEGE FOOTBALL, NCAA FB, NCAA FOOTBALL'
+    
+if 'CBB' in options:
+    options += 'COLLEGE BASKETBALL, NCAA BK, NCAA BASKETBALL'
 
 
 # Executing scraping process
@@ -240,68 +246,107 @@ while True:
     startingIndexCFB = 2400
     startingIndexNFL = 2400
     startingIndex = 2400
-    body = {"requests": []}
+    combinationDict = []
 
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        key = key.lower()
+        key = formatKey(key)
         bagOfWords = key.split()
-        if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
+        if 'ncaa' and 'bk' in bagOfWords or 'ncaa' and 'basketball' in bagOfWords or 'college' and 'basketball' in bagOfWords:
             print('NCAA Basketball')
-            worksheet = sh.get_worksheet(1)
+            try:
+                worksheet = sh.get_worksheet(1)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(1)
+            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
         elif 'nba' in bagOfWords:
             print('NBA')
-            worksheet = sh.get_worksheet(2)
+            try:
+                worksheet = sh.get_worksheet(2)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(2)
+            worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
-        elif 'ncaa' in bagOfWords and ('football' in bagOfWords or 'fb' in bagOfWords):
+        elif 'ncaa' and 'fb' in bagOfWords or 'ncaa' and 'football' in bagOfWords or 'college' and 'football' in bagOfWords:
             print('NCAA Football')
-            worksheet = sh.get_worksheet(3)
+            try:
+                worksheet = sh.get_worksheet(3)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(3)
+            worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
         elif 'nfl' in bagOfWords:
             print('NFL')
-            worksheet = sh.get_worksheet(4)
+            try:
+                worksheet = sh.get_worksheet(4)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(4)
+            worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
         else:
             continue
-        key = formatKey(key)
-        # find the unique spreadsheet id
-        worksheetNumber = worksheet.id
-        # create body for the google sheets batch update api
-        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
-                                                 "range": {"sheetId": worksheetNumber,
-                                                           "startColumnIndex": startingIndex - 5,
-                                                           "startRowIndex": 0,
-                                                           "endRowIndex": 2,
-                                                           "endColumnIndex": startingIndex - 4,
-                                                           },
-                                                 "rows": [{"values": [
-                                                     {"userEnteredValue": {"stringValue": key}}
-                                                 ]}, {"values": [
-                                                     {"userEnteredValue": {"stringValue": "Bluecoin"}}
-                                                 ]}],
-                                                 }
-                                 })
-        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
-                                                 "range": {"sheetId": worksheetNumber,
-                                                           "startColumnIndex": startingIndex - 4,
-                                                           "startRowIndex": 0,
-                                                           "endColumnIndex": startingIndex,
-                                                           },
-                                                 "rows": [],
-                                                 }
-                                 })
-        values = [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()
-        for row in values:
-            rowData = {"values": []}
-            for element in row:
-                rowData['values'].append({"userEnteredValue": {"stringValue": element}})
-            body['requests'][-1]['updateCells']['rows'].append(rowData)
-    sh.batch_update(body)
+            
+        try:
+            dictEvent = {"range": getRange(startingIndex - 5) + str(1), "values": [[key], ["Bluecoin"]]}
+            combinationDict.append(dictEvent)
+            dictEvent = {"range": getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1), "values":
+                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
+            combinationDict.append(dictEvent)
+        except:
+            failTime = time.perf_counter()
+            pause = 101 - (failTime - startTime)
+            
+            print('Pausing for', pause, 'seconds')
+            time.sleep(pause)
+            print('Resuming')
+            
+            gc = gspread.service_account(filename='credentials.json')
+            sh = gc.open("BettingScraper")
+            
+            worksheet = sh.get_worksheet(worksheetNumber)
+            
+            startTime = time.perf_counter() 
+            
+            dictEvent = {"range": getRange(startingIndex - 5) + str(1), "values": [[key], ["Bluecoin"]]}
+            combinationDict.append(dictEvent)
+            dictEvent = {"range": getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1), "values":
+                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
+            combinationDict.append(dictEvent)
+
+    worksheet.batch_update(combinationDict)
     print('Updated')
     
     website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
