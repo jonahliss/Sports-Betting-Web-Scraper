@@ -171,6 +171,7 @@ options = input('CBB, NBA, CFB, NFL\nWhat data do you want to scrape? ')
 website = SportDynamic('https://ubet.ag/', options)
 website.collectData()
 
+startTime = time.perf_counter()
 
 while True:
     
@@ -189,24 +190,76 @@ while True:
         bagOfWords = key.split()
         if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
             print('NCAA Basketball')
-            worksheet = sh.get_worksheet(1)
+            try:
+                worksheet = sh.get_worksheet(1)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(1)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
+            time.sleep(0.6)
         elif 'nba' in bagOfWords:
             print('NBA')
-            worksheet = sh.get_worksheet(2)
-            startingIndexNBA += 5
-            startingIndex = startingIndexNBA
+            try:
+                worksheet = sh.get_worksheet(2)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(2)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
         elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
             print('NCAA Football')
-            worksheet = sh.get_worksheet(3)
-            startingIndexCFB += 5
-            startingIndex = startingIndexCFB
+            try:
+                worksheet = sh.get_worksheet(3)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(3)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
         elif 'nfl' in bagOfWords:
             print('NFL')
-            worksheet = sh.get_worksheet(4)
-            startingIndexNFL += 5
-            startingIndex = startingIndexNFL
+            try:
+                worksheet = sh.get_worksheet(4)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(4)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
         else:
             continue
         key = formatKey(key)
