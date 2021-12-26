@@ -258,13 +258,14 @@ while True:
                 worksheet = sh.get_worksheet(1)
             except:
                 failTime = time.perf_counter()
-                pause = abs(101 - (failTime - startTime))
+                pause = 101 - (failTime - startTime)
                 print('Pausing for', pause, 'seconds')
                 time.sleep(pause)
                 print('Resuming')
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(1)
+                startTime = time.perf_counter() 
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
@@ -274,13 +275,14 @@ while True:
                 worksheet = sh.get_worksheet(2)
             except:
                 failTime = time.perf_counter()
-                pause = abs(101 - (failTime - startTime))
+                pause = 101 - (failTime - startTime)
                 print('Pausing for', pause, 'seconds')
                 time.sleep(pause)
                 print('Resuming')
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(2)
+                startTime = time.perf_counter() 
             worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
@@ -290,13 +292,14 @@ while True:
                 worksheet = sh.get_worksheet(3)
             except:
                 failTime = time.perf_counter()
-                pause = abs(101 - (failTime - startTime))
+                pause = 101 - (failTime - startTime)
                 print('Pausing for', pause, 'seconds')
                 time.sleep(pause)
                 print('Resuming')
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(3)
+                startTime = time.perf_counter() 
             worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
@@ -306,13 +309,14 @@ while True:
                 worksheet = sh.get_worksheet(4)
             except:
                 failTime = time.perf_counter()
-                pause = abs(101 - (failTime - startTime))
+                pause = 101 - (failTime - startTime)
                 print('Pausing for', pause, 'seconds')
                 time.sleep(pause)
                 print('Resuming')
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(4)
+                startTime = time.perf_counter() 
             worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
