@@ -81,7 +81,7 @@ class SportDynamic:
                 time.sleep(.5)
                 subsports = sport.find_elements(By.CSS_SELECTOR, "ul > li")
                 for subsport in subsports:
-                    if "PROPS" not in subsport.text:
+                    if "PROPS" not in subsport.text and ("NBA" in subsport.text or "NFL" in subsport.text or "NCAA" in subsport.text):
                         try:
                             subsport.find_element(By.CSS_SELECTOR, "a").click()
                         except:
@@ -103,7 +103,6 @@ class SportDynamic:
             # variables to help identify new team matchups
             prevID = -1
             isNew = True
-            # TODO fix for futures, not just h2h matchups
             # checks first header row to see if it is a prop, future, or h2h matchup
             # 0 is prop, 1 is future, 2 is h2h
             gameType = -1
