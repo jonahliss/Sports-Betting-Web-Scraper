@@ -269,7 +269,7 @@ website.collectData()
 # website.launchDriver()
 # website.enterDriver()
 #
-#%%
+# %%
 listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
                 'bears', 'bengals', 'browns', 'cowboys', 'broncos', 'washington', 'lions', 'packers', 'texans', 'colts',
                 'chiefs', 'chargers', 'rams', 'dolphins', 'vikings', 'patriots', 'saints', 'giants', 'jets', 'raiders',
@@ -298,7 +298,6 @@ listCollegeTeams = ['ohio st', 'michigan', 'michigan st', 'penn st', 'wisconsin'
                     'saint johns', 'saint bonaventure', 'saint marys', 'pepperdine', 'uab', 'usf', 'utah st', 'vcu',
                     'xavier', 'marquette', 'san francisco', 'hawaii', 'unlv', 'ncaa', 'college', 'ncaaf', 'ncaab']
 
-
 while True:
 
     print('Starting')
@@ -308,7 +307,7 @@ while True:
     startingIndexCFB = 600
     startingIndexNFL = 600
     startingIndex = 600
-    combinationDict = []
+    body = {"requests": []}
     # TODO purewage missing basketball in allbets dict
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
@@ -331,37 +330,60 @@ while True:
         if isNBA:
             print('NBA')
             worksheet = sh.get_worksheet(2)
-            worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
         elif isNFL:
             print('NFL')
             worksheet = sh.get_worksheet(4)
-            worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
         # TODO fix college identifation
         elif 'basketball' in bagOfWords or (isCollege and 'ncaab' in bagOfWords):
             print('NCAA Basketball')
             worksheet = sh.get_worksheet(1)
-            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
         elif 'football' in bagOfWords or (isCollege and 'ncaaf' in bagOfWords):
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
-            worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
         else:
             continue
         key = formatKey(key)
-        dictEvent = {"range": getRange(startingIndex - 5) + str(1), "values": [[key], ["Purewage"]]}
-        combinationDict.append(dictEvent)
-        dictEvent = {"range": getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
-                     "values": [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
-        combinationDict.append(dictEvent)
-    worksheet.batch_update(combinationDict)
+        # find the unique spreadsheet id
+        worksheetNumber = worksheet.id
+        # create body for the google sheets batch update api
+        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                 "range": {"sheetId": worksheetNumber,
+                                                           "startColumnIndex": startingIndex - 5,
+                                                           "startRowIndex": 0,
+                                                           "endRowIndex": 2,
+                                                           "endColumnIndex": startingIndex - 4,
+                                                           },
+                                                 "rows": [{"values": [
+                                                     {"userEnteredValue": {"stringValue": key}}
+                                                 ]}, {"values": [
+                                                     {"userEnteredValue": {"stringValue": "Purewage"}}
+                                                 ]}],
+                                                 }
+                                 })
+        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                 "range": {"sheetId": worksheetNumber,
+                                                           "startColumnIndex": startingIndex - 4,
+                                                           "startRowIndex": 0,
+                                                           "endColumnIndex": startingIndex,
+                                                           },
+                                                 "rows": [],
+                                                 }
+                                 })
+        values = [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()
+        for row in values:
+            rowData = {"values": []}
+            for element in row:
+                rowData['values'].append({"userEnteredValue": {"stringValue": element}})
+            body['requests'][-1]['updateCells']['rows'].append(rowData)
+    sh.batch_update(body)
     print('Updated')
 
     website.driver.find_element(By.XPATH, '//a[text()="Refresh Lines"]').click()

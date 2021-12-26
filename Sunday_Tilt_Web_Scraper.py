@@ -278,7 +278,7 @@ while True:
     startingIndexCFB = 1200
     startingIndexNFL = 1200
     startingIndex = 1200
-    combinationDict = []
+    body = {"requests": []}
 
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
@@ -301,60 +301,59 @@ while True:
         if isNBA:
             print('NBA')
             worksheet = sh.get_worksheet(2)
-            worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
         elif isNFL:
             print('NFL')
             worksheet = sh.get_worksheet(4)
-            worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
         elif 'basketball' in bagOfWords or (isCollege and 'ncaab' in bagOfWords):
             print('NCAA Basketball')
             worksheet = sh.get_worksheet(1)
-            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
         elif 'football' in bagOfWords or (isCollege and 'ncaaf' in bagOfWords):
             print('NCAA Football')
             worksheet = sh.get_worksheet(3)
-            worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
         else:
             continue
-
-        try:
-            key = formatKey(key)
-            dictEvent = {"range": getRange(startingIndex - 5) + str(1), "values": [[key], ["Sundaytilt"]]}
-            combinationDict.append(dictEvent)
-            dictEvent = {"range": getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1), "values":
-                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
-            combinationDict.append(dictEvent)
-        except:
-
-            failTime = time.perf_counter()
-            pause = 101 - (failTime - startTime)
-
-            print('Pausing for', pause, 'seconds')
-            time.sleep(pause)
-            print('Resuming')
-
-            gc = gspread.service_account(filename='credentials.json')
-            sh = gc.open("BettingScraper")
-
-            worksheet = sh.get_worksheet(worksheetNumber)
-
-            startTime = time.perf_counter()
-
-            key = formatKey(key)
-            dictEvent = {getRange(startingIndex - 5) + str(1), [[key], ["Sundaytilt"]]}
-            combinationDict.append(dictEvent)
-            dictEvent = {getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1),
-                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
-            combinationDict.append(dictEvent)
-    worksheet.batch_update(combinationDict)
+        key = formatKey(key)
+        # find the unique spreadsheet id
+        worksheetNumber = worksheet.id
+        # create body for the google sheets batch update api
+        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                 "range": {"sheetId": worksheetNumber,
+                                                           "startColumnIndex": startingIndex - 5,
+                                                           "startRowIndex": 0,
+                                                           "endRowIndex": 2,
+                                                           "endColumnIndex": startingIndex - 4,
+                                                           },
+                                                 "rows": [{"values": [
+                                                     {"userEnteredValue": {"stringValue": key}}
+                                                 ]}, {"values": [
+                                                     {"userEnteredValue": {"stringValue": "Sundaytilt"}}
+                                                 ]}],
+                                                 }
+                                 })
+        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                 "range": {"sheetId": worksheetNumber,
+                                                           "startColumnIndex": startingIndex - 4,
+                                                           "startRowIndex": 0,
+                                                           "endColumnIndex": startingIndex,
+                                                           },
+                                                 "rows": [],
+                                                 }
+                                 })
+        values = [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()
+        for row in values:
+            rowData = {"values": []}
+            for element in row:
+                rowData['values'].append({"userEnteredValue": {"stringValue": element}})
+            body['requests'][-1]['updateCells']['rows'].append(rowData)
+    sh.batch_update(body)
     print('Updated')
 
     website.driver.find_element(By.CSS_SELECTOR, "div[data-wager-type='REFRESH']").click()
