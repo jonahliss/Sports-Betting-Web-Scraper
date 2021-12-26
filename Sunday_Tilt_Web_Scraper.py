@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
+# Function to help organize Google Sheet
 def getRange(index):
     if (index - 26) / math.pow(26, 2) >= 1:
         return chr(64 + (index // int(math.pow(26, 2)))) + chr(
@@ -19,8 +20,7 @@ def getRange(index):
     return chr(65 + index)
 
 
-# PURPOSE: removes all special chracters from the key
-# PURPOSE: makes the key lowercase
+# Function to standardize text formatting across websites
 def formatKey(key):
     key = key.lower()
     key = key.replace("quarter", "q")
@@ -29,6 +29,7 @@ def formatKey(key):
     key = key.replace("2nd", "2")
     key = key.replace("3rd", "3")
     key = key.replace("4th", "4")
+    key = key.replace("½", ".5")
     key = key.replace("ncaa basketball", "ncaab")
     key = key.replace("ncaa football", "ncaaf")
     key = key.replace("college football", "ncaaf")
@@ -38,7 +39,6 @@ def formatKey(key):
     key = key.replace("game props", "gp")
     key = key.replace("player props", "pp")
     key = key.replace("live betting", "lb")
-    key = key.replace("the ", "")
     key = key.replace("2020/21", "")
     key = key.replace("2021/22", "")
     key = key.replace("(", "")
@@ -54,6 +54,7 @@ def formatKey(key):
     return key
 
 
+# Class to retrieve, sort, and return website data
 class SportDynamic:
     def __init__(self, url):
         self.url = url
@@ -230,19 +231,22 @@ class SportDynamic:
         self.sortData()
 
 
-# %%
+# Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
-print("Connected to Google Sheet")
 
+
+# Executing scraping process
 website = SportDynamic('https://www.sundaytilt.com/')
 website.collectData()
 
-#%%
-listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
-                'bears', 'bengals', 'browns', 'cowboys', 'broncos', 'washington', 'lions', 'packers', 'texans', 'colts',
-                'chiefs', 'chargers', 'rams', 'dolphins', 'vikings', 'patriots', 'saints', 'giants', 'jets', 'raiders',
-                'eagles', 'steelers', '49ers', 'seahawks', 'buccaneers', 'titans', 'jaguars']
+listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super bowl', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
+                'bears', 'bengals', 'browns', 'cowboys', 'broncos',
+                'lions', 'packers', 'texans', 'colts', 'jaguars',
+                'chiefs', 'chargers', 'rams', 'dolphins', 'vikings',
+                'patriots', 'saints', 'giants', 'jets', 'raiders',
+                'eagles', 'steelers', '49ers', 'seahawks',
+                'buccaneers', 'titans', 'team']
 
 listNBAteams = ['nba', 'eastern conference', 'western conference', 'celtics', 'nets', 'hornets', 'bulls', 'cavaliers',
                 'mavericks', 'heat', 'bucks', 'pacers', 'knicks', 'sixers', 'clippers', 'lakers', 'grizzlies',
@@ -300,24 +304,76 @@ while True:
                 break
         if isNBA:
             print('NBA')
-            worksheet = sh.get_worksheet(2)
-            startingIndexNBA += 5
-            startingIndex = startingIndexNBA
-        elif isNFL:
-            print('NFL')
-            worksheet = sh.get_worksheet(4)
-            startingIndexNFL += 5
-            startingIndex = startingIndexNFL
-        elif 'basketball' in bagOfWords or (isCollege and 'ncaab' in bagOfWords):
-            print('NCAA Basketball')
-            worksheet = sh.get_worksheet(1)
+            try:
+                worksheet = sh.get_worksheet(2)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(2)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
+            time.sleep(0.6)
+        elif isNFL:
+            print('NFL')
+            try:
+                worksheet = sh.get_worksheet(4)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(4)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
+        elif 'basketball' in bagOfWords or (isCollege and 'ncaab' in bagOfWords):
+            print('NCAA Basketball')
+            try:
+                worksheet = sh.get_worksheet(1)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(1)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
         elif 'football' in bagOfWords or (isCollege and 'ncaaf' in bagOfWords):
             print('NCAA Football')
-            worksheet = sh.get_worksheet(3)
-            startingIndexCFB += 5
-            startingIndex = startingIndexCFB
+            try:
+                worksheet = sh.get_worksheet(3)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(3)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
         else:
             continue
         key = formatKey(key)
