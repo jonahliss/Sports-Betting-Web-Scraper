@@ -246,7 +246,7 @@ while True:
     startingIndexCFB = 2400
     startingIndexNFL = 2400
     startingIndex = 2400
-    combinationDict = []
+    body = {"requests": []}
 
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
@@ -319,34 +319,40 @@ while True:
         else:
             continue
             
-        try:
-            dictEvent = {"range": getRange(startingIndex - 5) + str(1), "values": [[key], ["Bluecoin"]]}
-            combinationDict.append(dictEvent)
-            dictEvent = {"range": getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1), "values":
-                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
-            combinationDict.append(dictEvent)
-        except:
-            failTime = time.perf_counter()
-            pause = 101 - (failTime - startTime)
-            
-            print('Pausing for', pause, 'seconds')
-            time.sleep(pause)
-            print('Resuming')
-            
-            gc = gspread.service_account(filename='credentials.json')
-            sh = gc.open("BettingScraper")
-            
-            worksheet = sh.get_worksheet(worksheetNumber)
-            
-            startTime = time.perf_counter() 
-            
-            dictEvent = {"range": getRange(startingIndex - 5) + str(1), "values": [[key], ["Bluecoin"]]}
-            combinationDict.append(dictEvent)
-            dictEvent = {"range": getRange(startingIndex - 4) + ':' + getRange(startingIndex - 1), "values":
-                             [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()}
-            combinationDict.append(dictEvent)
-
-    worksheet.batch_update(combinationDict)
+        key = formatKey(key)
+        # find the unique spreadsheet id
+        worksheetNumber = worksheet.id
+        # create body for the google sheets batch update api
+        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                 "range": {"sheetId": worksheetNumber,
+                                                           "startColumnIndex": startingIndex - 5,
+                                                           "startRowIndex": 0,
+                                                           "endRowIndex": 2,
+                                                           "endColumnIndex": startingIndex - 4,
+                                                           },
+                                                 "rows": [{"values": [
+                                                     {"userEnteredValue": {"stringValue": key}}
+                                                 ]}, {"values": [
+                                                     {"userEnteredValue": {"stringValue": "Bluecoin"}}
+                                                 ]}],
+                                                 }
+                                 })
+        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                 "range": {"sheetId": worksheetNumber,
+                                                           "startColumnIndex": startingIndex - 4,
+                                                           "startRowIndex": 0,
+                                                           "endColumnIndex": startingIndex,
+                                                           },
+                                                 "rows": [],
+                                                 }
+                                 })
+        values = [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()
+        for row in values:
+            rowData = {"values": []}
+            for element in row:
+                rowData['values'].append({"userEnteredValue": {"stringValue": element}})
+            body['requests'][-1]['updateCells']['rows'].append(rowData)
+    sh.batch_update(body)
     print('Updated')
     
     website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
