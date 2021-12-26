@@ -269,6 +269,7 @@ while True:
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
+            time.sleep(0.6)
         elif 'nba' in bagOfWords:
             print('NBA')
             try:
@@ -286,6 +287,7 @@ while True:
             worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
+            time.sleep(0.6)
         elif 'ncaa' and 'fb' in bagOfWords or 'ncaa' and 'football' in bagOfWords or 'college' and 'football' in bagOfWords:
             print('NCAA Football')
             try:
@@ -303,6 +305,7 @@ while True:
             worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
+            time.sleep(0.6)
         elif 'nfl' in bagOfWords:
             print('NFL')
             try:
@@ -320,6 +323,7 @@ while True:
             worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
+            time.sleep(0.6)
         else:
             continue
             
