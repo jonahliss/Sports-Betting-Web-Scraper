@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
 
+# Function to help organize Google Sheet
 def getRange(index):
     if (index - 26) / math.pow(26, 2) >= 1:
         return chr(64 + (index // int(math.pow(26, 2)))) + chr(
@@ -19,14 +20,13 @@ def getRange(index):
     return chr(65 + index)
 
 
+# Function to standardize text formatting across websites
 def formatKey(key):
     key = key.lower()
     key = key.replace("quarters", "1q")
     key = key.replace("quarter", "q")
-    key = key.replace("qtr", "q")
     key = key.replace("half", "h")
     key = key.replace("1st", "1")
-    key = key.replace("first", "1")
     key = key.replace("2nd", "2")
     key = key.replace("3rd", "3")
     key = key.replace("4th", "4")
@@ -34,15 +34,8 @@ def formatKey(key):
     key = key.replace("ncaa football", "ncaaf")
     key = key.replace("college football", "ncaaf")
     key = key.replace("margin of victory", "mov")
-    key = key.replace("winning margin", "mov")
-    key = key.replace("scoring play", "sp")
-    key = key.replace("points", "p")
     key = key.replace("basketball", "b")
     key = key.replace("football", "f")
-    key = key.replace("@", "vs")
-    key = key.replace("2021", "")
-    key = key.replace("2022", "")
-    key = key.replace("the ", "")
     key = key.replace("(", "")
     key = key.replace(")", "")
     key = key.replace("-", "")
@@ -52,11 +45,13 @@ def formatKey(key):
     return key
 
 
+# Class to retrieve, sort, and return website data
 class SportDynamic:
-    def __init__(self, url):
+    def __init__(self, url, options):
         self.url = url
-        self.allBets = {}
+        self.options = options
         self.soup = ""
+        self.allBets = {}
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -76,12 +71,12 @@ class SportDynamic:
         # list of all elements of sport categories
         sports = self.driver.find_elements(By.CSS_SELECTOR, "#sportSide > li")
         for sport in sports:
-            if sport.text != "SPORTS" and ("basketball" in sport.text.lower() or "football" in sport.text.lower()):
+            if sport.text != "SPORTS" and self.options in sport.text.lower():
                 sport.find_element(By.CSS_SELECTOR, "a").click()
                 time.sleep(.5)
                 subsports = sport.find_elements(By.CSS_SELECTOR, "ul > li")
                 for subsport in subsports:
-                    if "PROPS" not in subsport.text and ("NBA" in subsport.text or "NFL" in subsport.text or "NCAA" in subsport.text):
+                    if "PROPS" not in subsport.text:
                         try:
                             subsport.find_element(By.CSS_SELECTOR, "a").click()
                         except:
@@ -89,8 +84,8 @@ class SportDynamic:
 
     def retrieveData(self):
         html = self.driver.page_source
-        # self.driver.quit()
         self.soup = BeautifulSoup(html, "html.parser")
+        '''self.driver.quit()'''
 
     def sortData(self):
         self.allBets = {}
@@ -103,6 +98,7 @@ class SportDynamic:
             # variables to help identify new team matchups
             prevID = -1
             isNew = True
+            # TODO fix for futures, not just h2h matchups
             # checks first header row to see if it is a prop, future, or h2h matchup
             # 0 is prop, 1 is future, 2 is h2h
             gameType = -1
@@ -255,20 +251,21 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         self.sortData()
+    
 
-
-# %%
+# Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
-print("Connected to Google Sheet")
-
 sh = gc.open("BettingScraper")
 
-website = SportDynamic('https://www.purewage.com/')
+
+# Determining sports and leageus to scrape
+options = input('basketball, football\nWhat data do you want to scrape? ')
+
+
+# Executing scraping process
+website = SportDynamic('https://www.purewage.com/', options)
 website.collectData()
-# website.launchDriver()
-# website.enterDriver()
-#
-# %%
+
 listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
                 'bears', 'bengals', 'browns', 'cowboys', 'broncos', 'washington', 'lions', 'packers', 'texans', 'colts',
                 'chiefs', 'chargers', 'rams', 'dolphins', 'vikings', 'patriots', 'saints', 'giants', 'jets', 'raiders',
@@ -296,6 +293,8 @@ listCollegeTeams = ['ohio st', 'michigan', 'michigan st', 'penn st', 'wisconsin'
                     'colorado st', 'louisiana tech', 'smu', 'drake', 'loyola chicago', 'miami florida', 'richmond',
                     'saint johns', 'saint bonaventure', 'saint marys', 'pepperdine', 'uab', 'usf', 'utah st', 'vcu',
                     'xavier', 'marquette', 'san francisco', 'hawaii', 'unlv', 'ncaa', 'college', 'ncaaf', 'ncaab']
+
+startTime = time.perf_counter() 
 
 while True:
 
@@ -328,25 +327,77 @@ while True:
                 break
         if isNBA:
             print('NBA')
-            worksheet = sh.get_worksheet(2)
-            startingIndexNBA += 5
-            startingIndex = startingIndexNBA
+            try:
+                worksheet = sh.get_worksheet(2)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(2)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
         elif isNFL:
             print('NFL')
-            worksheet = sh.get_worksheet(4)
-            startingIndexNFL += 5
-            startingIndex = startingIndexNFL
+            try:
+                worksheet = sh.get_worksheet(4)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(4)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
         # TODO fix college identifation
         elif 'basketball' in bagOfWords or (isCollege and 'ncaab' in bagOfWords):
             print('NCAA Basketball')
-            worksheet = sh.get_worksheet(1)
+            try:
+                worksheet = sh.get_worksheet(1)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(1)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
+            time.sleep(0.6)
         elif 'football' in bagOfWords or (isCollege and 'ncaaf' in bagOfWords):
             print('NCAA Football')
-            worksheet = sh.get_worksheet(3)
-            startingIndexCFB += 5
-            startingIndex = startingIndexCFB
+            try:
+                worksheet = sh.get_worksheet(3)
+            except:
+                failTime = time.perf_counter()
+                pause = 101 - (failTime - startTime)
+                print('Pausing for', pause, 'seconds')
+                time.sleep(pause)
+                print('Resuming')
+                gc = gspread.service_account(filename='credentials.json')
+                sh = gc.open("BettingScraper")
+                worksheet = sh.get_worksheet(3)
+                startTime = time.perf_counter() 
+            worksheetNumber = 1
+            startingIndexCBB += 5
+            startingIndex = startingIndexCBB
+            time.sleep(0.6)
         else:
             continue
         key = formatKey(key)
@@ -386,5 +437,5 @@ while True:
     print('Updated')
 
     website.driver.find_element(By.XPATH, '//a[text()="Refresh Lines"]').click()
-
-    time.sleep(30)
+    website.retrieveData()
+    website.sortData()
