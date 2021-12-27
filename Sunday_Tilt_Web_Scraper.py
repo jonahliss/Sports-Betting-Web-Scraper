@@ -412,6 +412,8 @@ while True:
     sh.batch_update(body)
     print('Updated')
 
+    website.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + Keys.HOME)
+    time.sleep(.5)
     website.driver.find_element(By.CSS_SELECTOR, "div[data-wager-type='REFRESH']").click()
     website.retrieveData()
     website.sortData()

@@ -5,6 +5,7 @@ import gspread
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -41,6 +42,7 @@ def formatKey(key):
     key = key.replace("-", "")
     key = key.replace(" ", "")
     key = key.replace("lines", "")
+    key = key.replace("men", "")
     key = key.replace("nan", "NaN")
     return key
 
@@ -76,7 +78,7 @@ class SportDynamic:
                 time.sleep(.5)
                 subsports = sport.find_elements(By.CSS_SELECTOR, "ul > li")
                 for subsport in subsports:
-                    if "PROPS" not in subsport.text:
+                    if "PROPS" not in subsport.text and ("NBA" in subsport.text or "NFL" in subsport.text or "NCAA" in subsport.text):
                         try:
                             subsport.find_element(By.CSS_SELECTOR, "a").click()
                         except:
@@ -436,6 +438,8 @@ while True:
     sh.batch_update(body)
     print('Updated')
 
+    website.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + Keys.HOME)
+    time.sleep(.5)
     website.driver.find_element(By.XPATH, '//a[text()="Refresh Lines"]').click()
     website.retrieveData()
     website.sortData()

@@ -5,6 +5,7 @@ import gspread
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -362,7 +363,9 @@ while True:
             body['requests'][-1]['updateCells']['rows'].append(rowData)
     sh.batch_update(body)
     print('Updated')
-    
+
+    website.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + Keys.HOME)
+    time.sleep(.5)
     website.driver.find_element(By.NAME, "ctl00$WagerContent$ctl01").click()
     website.retrieveData()
     website.sortData()
