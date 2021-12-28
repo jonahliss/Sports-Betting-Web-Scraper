@@ -54,7 +54,6 @@ def formatKey(key):
     return key
 
 
-# TODO implement a format college team name function
 def formatTeamName(name):
     dictNames = {
         'ohio st': 'ohiostate',
@@ -64,7 +63,6 @@ def formatTeamName(name):
         'w michigan': 'westernmichigan',
         'air force': 'airforce',
         'mississippi st': 'mississippistate',
-        'mississippi': 'olemiss',
         'south carolina': 'southcarolina',
         's carolina': 'southcarolina',
         'iowa st': 'iowastate',

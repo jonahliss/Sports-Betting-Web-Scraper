@@ -41,6 +41,62 @@ def formatKey(key):
     return key
 
 
+def formatTeamName(name):
+    dictNames = {
+        'ohio state': 'ohiostate',
+        'michigan state': 'michiganstate',
+        'penn state': 'pennstate',
+        'texas a&m': 'texasanm',
+        'western michigan': 'westernmichigan',
+        'air force': 'airforce',
+        'mississippi state': 'mississippistate',
+        'ole miss': 'mississippi',
+        'south carolina': 'southcarolina',
+        'iowa state': 'iowastate',
+        'oklahoma state': 'oklahomastate',
+        'kansas state': 'kansasstate',
+        'texas tech': 'texastech',
+        'west virginia': 'westvirginia',
+        'notre dame': 'notredame',
+        'florida state': 'floridastate',
+        'georgia tech': 'georgiatech',
+        'north carolina state': 'ncstate',
+        'north carolina': 'northcarolina',
+        'virginia tech': 'virginiatech',
+        'boston college': 'bostoncollege',
+        'wake forest': 'wakeforest',
+        'washington state': 'washingtonstate',
+        'oregon state': 'oregonstate',
+        'arizona state': 'arizonastate',
+        'central michigan': 'centralmichigan',
+        'eastern michigan': 'easternmichigan',
+        'central florida': 'centralflorida',
+        'miami (oh)': 'miamiohio',
+        'western kentucky': 'westernkentucky',
+        'boise state': 'boisestate',
+        'fresno state': 'fresnostate',
+        'wichita state': 'wichita',
+        'seton hall': 'setonhall',
+        'st johns': 'saintjohns',
+        'saint louis': 'saintlouis',
+        'brigham young': 'byu',
+        'colorado state': 'coloradostate',
+        'louisiana tech': 'louisianatech',
+        'loyola chicago': 'loyolachicago',
+        'miami (fl)': 'miami',
+        'saint bonaventure': 'saintbonaventure',
+        'saint marys': 'saintmarys',
+        'utah state': 'utahstate',
+        'san francisco': 'sfu',
+        'st marys ca': 'saintmarysca',
+    }
+    name = name.lower()
+    for key in dictNames:
+        if key in name:
+            name = name.replace(key, dictNames[key])
+    return name
+
+
 # Function to classify HTML class text as a team's name, spread, odds, or moneyline
 def determineChild(child):
     global teamName, spread, odds, moneyline
@@ -54,6 +110,9 @@ def determineChild(child):
             temp = child.find_all(class_='sportsbook-outcome-body-wrapper')[i].text
             if 'O' in temp or 'U' in temp:
                 odds = temp
+                odds = odds.replace('O', 'o')
+                odds = odds.replace('U', 'u')
+                odds = odds.replace('\xa0', '')
             elif (temp.count('+') + temp.count('-')) == 2:
                 spread = temp
             elif (temp.count('+') + temp.count('-')) == 1:
@@ -83,21 +142,23 @@ class SportStatic:
             children = event.find_all('tr')
             for child in children[1:]:
                 determineChild(child)
-                self.teams_list.append(formatKey(teamName))
-                self.spreads_list.append(formatKey(spread))
-                self.odds_list.append(formatKey(odds))
-                self.moneylines_list.append(formatKey(moneyline))
+                self.teams_list.append(formatTeamName(teamName))
+                self.spreads_list.append(spread)
+                self.odds_list.append(odds)
+                self.moneylines_list.append(moneyline)
 
     def displayData(self):
         self.retrieveData()
         self.sortData()
         self.df = pd.DataFrame()
-        self.df = pd.concat([self.df, pd.DataFrame({'Team': self.teams_list}), pd.DataFrame({'Spread': self.spreads_list}),
-                             pd.DataFrame({'Odds': self.odds_list}), pd.DataFrame({'Moneyline': self.moneylines_list})], axis=1)
+        self.df = pd.concat(
+            [self.df, pd.DataFrame({'Team': self.teams_list}), pd.DataFrame({'Spread': self.spreads_list}),
+             pd.DataFrame({'Odds': self.odds_list}), pd.DataFrame({'Moneyline': self.moneylines_list})], axis=1)
         self.df = self.df.fillna('')
         return self.df
 
-    
+
+# %%
 # Launching automated Chrome Browser
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
@@ -105,49 +166,48 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 driver = webdriver.Chrome(ChromeDriverManager().install())
 
-
 # Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 
-
 # Initializing data used to execute scraping process
-scraping_list_NFL = [[4,'A1','nfl','football/88670561','B:E'],
-                 [4,'F1','nfl1h','football/88670561?category=halves&subcategory=1st-half','G:J'],
-                 [4,'K1','nfl2h','football/88670561?category=halves&subcategory=2nd-half','L:O'],
-                 [4,'P1','nfl1q','football/88670561?category=quarters&subcategory=1st-quarter','Q:T'],
-                 [4,'U1','nfl2q','football/88670561?category=quarters&subcategory=2nd-quarter','V:Y'],
-                 [4,'Z1','nfl3q','football/88670561?category=quarters&subcategory=3rd-quarter','AA:AD'],
-                 [4,'AE1','nfl4q','football/88670561?category=quarters&subcategory=4th-quarter','AF:AI']]
-                 
-scraping_list_CFB = [[3,'A1','ncaaf','football/88670775','B:E'],
-                 [3,'F1','ncaaf1h','football/88670775?category=halves&subcategory=1st-half','G:J'],
-                 [3,'K1','ncaaf2h','football/88670775?category=halves&subcategory=2nd-half','L:O'],
-                 [3,'P1','ncaaf1q','football/88670775?category=quarters&subcategory=1st-quarter','Q:T'],
-                 [3,'U1','ncaaf2q','football/88670775?category=quarters&subcategory=2nd-quarter','V:Y'],
-                 [3,'Z1','ncaaf3q','football/88670775?category=quarters&subcategory=3rd-quarter','AA:AD'],
-                 [3,'AE1','ncaaf4q','football/88670775?category=quarters&subcategory=4th-quarter','AF:AI']]
-                 
-scraping_list_NBA = [[2,'A1','nba','basketball/88670846','B:E'],
-                 [2,'F1','nba1h','basketball/88670846?category=halves&subcategory=1st-half','G:J'],
-                 [2,'K1','nba2h','basketball/88670846?category=halves&subcategory=2nd-half','L:O'],
-                 [2,'P1','nba1q','basketball/88670846?category=quarters&subcategory=1st-quarter','Q:T'],
-                 [2,'U1','nba2q','basketball/88670846?category=quarters&subcategory=2nd-quarter','V:Y'],
-                 [2,'Z1','nba3q','basketball/88670846?category=quarters&subcategory=3rd-quarter','AA:AD'],
-                 [2,'AE1','nba4q','basketball/88670846?category=quarters&subcategory=4th-quarter','AF:AI']]
-                 
-scraping_list_CBB = [[1,'A1','ncaab','basketball/88670771','B:E',1],
-                 [1,'F1','ncaab1h','basketball/88670771?category=halves&subcategory=1st-half','G:J'],
-                 [1,'K1','ncaab2h','basketball/88670771?category=halves&subcategory=2nd-half','L:O'],
-                 [1,'P1','ncaab1q','basketball/88670771?category=quarters&subcategory=1st-quarter','Q:T'],
-                 [1,'U1','ncaab2q','basketball/88670771?category=quarters&subcategory=2nd-quarter','V:Y'],
-                 [1,'Z1','ncaab3q','basketball/88670771?category=quarters&subcategory=3rd-quarter','AA:AD'],
-                 [1,'AE1','ncaab4q','basketball/88670771?category=quarters&subcategory=4th-quarter','AF:AI']]
+scraping_list_NFL = [[4, 0, 'nfl', 'football/88670561'],
+                     [4, 5, 'nfl1h', 'football/88670561?category=halves&subcategory=1st-half'],
+                     [4, 10, 'nfl2h', 'football/88670561?category=halves&subcategory=2nd-half'],
+                     [4, 15, 'nfl1q', 'football/88670561?category=quarters&subcategory=1st-quarter'],
+                     [4, 20, 'nfl2q', 'football/88670561?category=quarters&subcategory=2nd-quarter'],
+                     [4, 25, 'nfl3q', 'football/88670561?category=quarters&subcategory=3rd-quarter'],
+                     [4, 30, 'nfl4q', 'football/88670561?category=quarters&subcategory=4th-quarter']]
 
+scraping_list_CFB = [[3, 0, 'ncaaf', 'football/88670775'],
+                     [3, 5, 'ncaaf1h', 'football/88670775?category=halves&subcategory=1st-half'],
+                     [3, 10, 'ncaaf2h', 'football/88670775?category=halves&subcategory=2nd-half'],
+                     [3, 15, 'ncaaf1q', 'football/88670775?category=quarters&subcategory=1st-quarter'],
+                     [3, 20, 'ncaaf2q', 'football/88670775?category=quarters&subcategory=2nd-quarter'],
+                     [3, 25, 'ncaaf3q', 'football/88670775?category=quarters&subcategory=3rd-quarter'],
+                     [3, 30, 'ncaaf4q', 'football/88670775?category=quarters&subcategory=4th-quarter']]
+
+scraping_list_NBA = [[2, 0, 'nba', 'basketball/88670846'],
+                     [2, 5, 'nba1h', 'basketball/88670846?category=halves&subcategory=1st-half'],
+                     [2, 10, 'nba2h', 'basketball/88670846?category=halves&subcategory=2nd-half'],
+                     [2, 15, 'nba1q', 'basketball/88670846?category=quarters&subcategory=1st-quarter'],
+                     [2, 20, 'nba2q', 'basketball/88670846?category=quarters&subcategory=2nd-quarter'],
+                     [2, 25, 'nba3q', 'basketball/88670846?category=quarters&subcategory=3rd-quarter'],
+                     [2, 30, 'nba4q', 'basketball/88670846?category=quarters&subcategory=4th-quarter']]
+
+scraping_list_CBB = [[1, 0, 'ncaab', 'basketball/88670771', 'B:E', 1],
+                     [1, 5, 'ncaab1h', 'basketball/88670771?category=halves&subcategory=1st-half'],
+                     [1, 10, 'ncaab2h', 'basketball/88670771?category=halves&subcategory=2nd-half'],
+                     [1, 15, 'ncaab1q', 'basketball/88670771?category=quarters&subcategory=1st-quarter'],
+                     [1, 20, 'ncaab2q', 'basketball/88670771?category=quarters&subcategory=2nd-quarter'],
+                     [1, 25, 'ncaab3q', 'basketball/88670771?category=quarters&subcategory=3rd-quarter'],
+                     [1, 30, 'ncaab4q', 'basketball/88670771?category=quarters&subcategory=4th-quarter']]
 
 # Determining sports and leageus to scrape
 options = input('CBB, NBA, CFB, NFL\nWhat data do you want to scrape? ')
 scraping_list = []
+body = {"requests": []}
+
 if 'CBB' in options:
     scraping_list += scraping_list_CBB
 if 'NBA' in options:
@@ -156,19 +216,46 @@ if 'CFB' in options:
     scraping_list += scraping_list_CFB
 if 'NFL' in options:
     scraping_list += scraping_list_NFL
-    
 
 # Executing scraping process
 while True:
     for item in scraping_list:
-    # Select Appropriate Spreadsheet
-        worksheet = sh.get_worksheet(item[0])
-    # Write Title onto Spreadsheet
+        # Select Appropriate Spreadsheet
+        worksheetNumber = sh.get_worksheet(item[0]).id
+        # Write Title onto Spreadsheet
         print('Starting', item[2])
-        worksheet.update(item[1], item[2])
-    # Collect Data for Title 
-        obj = SportStatic('https://sportsbook.draftkings.com/leagues/'+item[3])
+        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                 "range": {"sheetId": worksheetNumber,
+                                                           "startColumnIndex": item[1],
+                                                           "startRowIndex": 0,
+                                                           "endRowIndex": 2,
+                                                           "endColumnIndex": item[1] + 1
+                                                           },
+                                                 "rows": [{"values": [
+                                                     {"userEnteredValue": {"stringValue": item[2]}}
+                                                 ]}, {"values": [
+                                                     {"userEnteredValue": {"stringValue": "DraftKings"}}
+                                                 ]}],
+                                                 }
+                                 })
+        # Collect Data for Title
+        obj = SportStatic('https://sportsbook.draftkings.com/leagues/' + item[3])
         df = obj.displayData()
-    # Insert Data into Spreadsheet
-        worksheet.update(item[4], [df.columns.values.tolist()] + df.values.tolist())
-        print('Updated', item[2])
+        # Insert Data into Spreadsheet
+        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                 "range": {"sheetId": worksheetNumber,
+                                                           "startColumnIndex": item[1] + 1,
+                                                           "startRowIndex": 0,
+                                                           "endColumnIndex": item[1] + 5,
+                                                           },
+                                                 "rows": [],
+                                                 }
+                                 })
+        values = [df.columns.values.tolist()] + df.values.tolist()
+        for row in values:
+            rowData = {"values": []}
+            for element in row:
+                rowData['values'].append({"userEnteredValue": {"stringValue": element}})
+            body['requests'][-1]['updateCells']['rows'].append(rowData)
+    sh.batch_update(body)
+    print('Updated')
