@@ -36,6 +36,9 @@ def formatKey(key):
     key = key.replace(")", "")
     key = key.replace("-", "")
     key = key.replace(" ", "")
+    key = key.replace('\xa0', '')
+    key = key.replace('o ', 'o')
+    key = key.replace('u ', 'u')
     key = key.replace("lines", "")
     key = key.replace("nan", "NaN")
     return key
@@ -139,14 +142,24 @@ class SportStatic:
         self.soup = BeautifulSoup(page, "html.parser")
 
     def sortData(self):
-        for event in self.soup.select('div.parlay-card-10-a'):
-            children = event.find_all('tr')
-            for child in children[1:]:
-                determineChild(child)
-                self.teams_list.append(formatTeamName(teamName))
-                self.spreads_list.append(spread)
-                self.odds_list.append(odds)
-                self.moneylines_list.append(moneyline)
+        if 'props' in self.url:
+            events = self.soup.find_all(class_='sportsbook-event-accordion__wrapper expanded')
+            for event in events:
+                for prop in event.find(class_='sportsbook-table__body'):
+                    props = prop.find_all(class_='sportsbook-table__column-row')
+                    self.teams_list.append(props[0].text)
+                    self.spreads_list.append(props[1].text)
+                    self.odds_list.append(props[2].text)
+                    self.moneylines_list.append('NaN')
+        else:
+            for event in self.soup.select('div.parlay-card-10-a'):
+                children = event.find_all('tr')
+                for child in children[1:]:
+                    determineChild(child)
+                    self.teams_list.append(formatTeamName(teamName))
+                    self.spreads_list.append(spread)
+                    self.odds_list.append(odds)
+                    self.moneylines_list.append(moneyline)
 
     def displayData(self):
         self.retrieveData()
@@ -159,7 +172,6 @@ class SportStatic:
         return self.df
 
 
-# %%
 # Launching automated Chrome Browser
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
@@ -194,7 +206,14 @@ scraping_list_NBA = [[2, 0, 'nba', 'basketball/88670846'],
                      [2, 15, 'nba1q', 'basketball/88670846?category=quarters&subcategory=1st-quarter'],
                      [2, 20, 'nba2q', 'basketball/88670846?category=quarters&subcategory=2nd-quarter'],
                      [2, 25, 'nba3q', 'basketball/88670846?category=quarters&subcategory=3rd-quarter'],
-                     [2, 30, 'nba4q', 'basketball/88670846?category=quarters&subcategory=4th-quarter']]
+                     [2, 30, 'nba4q', 'basketball/88670846?category=quarters&subcategory=4th-quarter'],
+                     [2, 35, 'nbapropspoints', 'basketball/88670846?category=player-props&subcategory=points'],
+                     [2, 40, 'nbapropsrebounds', 'basketball/88670846?category=player-props&subcategory=rebounds'],
+                     [2, 45, 'nbapropsassists', 'basketball/88670846?category=player-props&subcategory=assists'],
+                     [2, 50, 'nbapropsthrees', 'basketball/88670846?category=player-props&subcategory=threes'],
+                     [2, 55, 'nbapropsblocks', 'basketball/88670846?category=player-props&subcategory=blocks'],
+                     [2, 60, 'nbapropssteals', 'basketball/88670846?category=player-props&subcategory=steals'],
+                     [2, 65, 'nbapropsturnovers', 'basketball/88670846?category=player-props&subcategory=turnovers']]
 
 scraping_list_CBB = [[1, 0, 'ncaab', 'basketball/88670771', 'B:E', 1],
                      [1, 5, 'ncaab1h', 'basketball/88670771?category=halves&subcategory=1st-half'],
