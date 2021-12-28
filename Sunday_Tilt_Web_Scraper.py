@@ -109,6 +109,7 @@ def formatTeamName(name):
     for key in dictNames:
         if key in name:
             name = name.replace(key, dictNames[key])
+            break
     return name
 
 

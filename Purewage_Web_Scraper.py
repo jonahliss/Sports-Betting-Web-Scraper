@@ -46,6 +46,62 @@ def formatKey(key):
     key = key.replace("nan", "NaN")
     return key
 
+def formatTeamName(name):
+    dictNames = {
+        'ohio state': 'ohiostate',
+        'michigan state': 'michiganstate',
+        'penn state': 'pennstate',
+        'texas a&m': 'texasanm',
+        'western michigan': 'westernmichigan',
+        'air force': 'airforce',
+        'mississippi state': 'mississippistate',
+        'south carolina': 'southcarolina',
+        'iowa state': 'iowastate',
+        'oklahoma state': 'oklahomastate',
+        'kansas state': 'kansasstate',
+        'texas tech': 'texastech',
+        'west virginia': 'westvirginia',
+        'notre dame': 'notredame',
+        'florida state': 'floridastate',
+        'georgia tech': 'georgiatech',
+        'nc state': 'ncstate',
+        'north carolina': 'northcarolina',
+        'virginia tech': 'virginiatech',
+        'boston college': 'bostoncollege',
+        'wake forest': 'wakeforest',
+        'washington state': 'washingtonstate',
+        'oregon state': 'oregonstate',
+        'arizona state': 'arizonastate',
+        'central michigan': 'centralmichigan',
+        'eastern michigan': 'easternmichigan',
+        'central florida': 'centralflorida',
+        'miami ohio': 'miamiohio',
+        'western kentucky': 'westernkentucky',
+        'boise state': 'boisestate',
+        'fresno state': 'fresnostate',
+        'wichita state': 'wichita',
+        'seton hall': 'setonhall',
+        'st johns': 'saintjohns',
+        'saint louis': 'saintlouis',
+        'brigham young': 'byu',
+        'colorado state': 'coloradostate',
+        'louisiana tech': 'louisianatech',
+        'loyola chicago': 'loyolachicago',
+        'miami florida': 'miami',
+        'saint bonaventure': 'saintbonaventure',
+        'saint marys': 'saintmarys',
+        'utah state': 'utahstate',
+        'san francisco': 'sfu',
+        'st marys ca': 'saintmarysca',
+    }
+    name = name.lower()
+    for key in dictNames:
+        if key in name:
+            name = name.replace(key, dictNames[key])
+            break
+    name = name.replace(" 1h", "")
+    name = name.replace(" 1q", "")
+    return name
 
 # Class to retrieve, sort, and return website data
 class SportDynamic:
@@ -141,6 +197,7 @@ class SportDynamic:
                         teamName = str(teamName)
                         teamName = teamName.strip()
                         teamName = teamName.lower()
+                        teamName = formatTeamName(teamName)
                     except:
                         teamName = "NaN"
                     try:
@@ -189,6 +246,7 @@ class SportDynamic:
                         teamName = teamName.strip()
                         teamName = teamName.lower()
                         eventName = teamName
+                        teamName = formatTeamName(teamName)
                     except:
                         teamName = "NaN"
                         eventName = "NaN"
@@ -215,6 +273,7 @@ class SportDynamic:
                         teamName = teamName.strip()
                         teamName = teamName.lower()
                         eventName = teamName
+                        teamName = formatTeamName(teamName)
                     except:
                         teamName = "NaN"
                         eventName = "NaN"
@@ -254,7 +313,7 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
     
-
+#%%
 # Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
