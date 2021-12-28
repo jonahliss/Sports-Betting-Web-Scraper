@@ -54,6 +54,66 @@ def formatKey(key):
     return key
 
 
+# TODO implement a format college team name function
+def formatTeamName(name):
+    dictNames = {
+        'ohio st': 'ohiostate',
+        'michigan st': 'michiganstate',
+        'penn st': 'pennstate',
+        'texas a&m': 'texasanm',
+        'w michigan': 'westernmichigan',
+        'air force': 'airforce',
+        'mississippi st': 'mississippistate',
+        'mississippi': 'olemiss',
+        'south carolina': 'southcarolina',
+        's carolina': 'southcarolina',
+        'iowa st': 'iowastate',
+        'oklahoma st': 'oklahomastate',
+        'kansas st': 'kansasstate',
+        'texas tech': 'texastech',
+        'w virginia': 'westvirginia',
+        'west virginia': 'westvirginia',
+        'notre dame': 'notredame',
+        'florida st': 'floridastate',
+        'georgia tech': 'georgiatech',
+        'north carolina': 'northcarolina',
+        'nc state': 'ncstate',
+        'va tech': 'virginiatech',
+        'virginia tech': 'virginiatech',
+        'boston college': 'bostoncollege',
+        'wake forest': 'wakeforest',
+        'washington st': 'washingtonstate',
+        'oregon st': 'oregonstate',
+        'arizona st': 'arizonastate',
+        'central michigan': 'centralmichigan',
+        'eastern michigan': 'easternmichigan',
+        'central florida': 'centralflorida',
+        'miami ohio': 'miamiohio',
+        'western kentucky': 'westernkentucky',
+        'boise st': 'boisestate',
+        'fresno st': 'fresnostate',
+        'wichita st': 'wichita',
+        'seton hall': 'setonhall',
+        'st johns': 'saintjohns',
+        'saint louis': 'saintlouis',
+        'brigham young': 'byu',
+        'colorado st': 'coloradostate',
+        'louisiana tech': 'louisianatech',
+        'loyola chicago': 'loyolachicago',
+        'miami florida': 'miami',
+        'saint bonaventure': 'saintbonaventure',
+        'saint marys': 'saintmarys',
+        'utah st': 'utahstate',
+        'san francisco': 'sfu',
+        'st marys ca': 'saintmarysca',
+    }
+    name = name.lower()
+    for key in dictNames:
+        if key in name:
+            name = name.replace(key, dictNames[key])
+    return name
+
+
 # Class to retrieve, sort, and return website data
 class SportDynamic:
     def __init__(self, url):
@@ -140,7 +200,8 @@ class SportDynamic:
             # tries to find the "header-a" tags that hold the event types
             try:
                 eventType = event.find(class_='header-a').div.span.text
-                eventType = eventType + " " + event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
+                eventType = eventType + " " + \
+                            event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
                 # creates a new list eventType in the allBets dictionary, which will hold
                 # dicts of the micro betting events
                 website.allBets[eventType] = []
@@ -164,6 +225,7 @@ class SportDynamic:
                 futures = teams[0].select('div.group')
                 try:
                     teamName = futures[0].find('div', class_='team').select('span')[1].text
+                    teamName = formatTeamName(teamName)
                 except:
                     teamName = "NaN"
                 try:
@@ -182,6 +244,7 @@ class SportDynamic:
                     data = team.find_all('div', recursive=False)
                     try:
                         teamName = data[0].select('div.team > span')[0].text
+                        teamName = formatTeamName(teamName)
                     except:
                         teamName = "NaN"
                     try:
@@ -231,14 +294,15 @@ class SportDynamic:
         self.sortData()
 
 
+# %%
 # Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 
-
 # Executing scraping process
 website = SportDynamic('https://www.sundaytilt.com/')
 website.collectData()
+#%%
 
 listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super bowl', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
                 'bears', 'bengals', 'browns', 'cowboys', 'broncos',
@@ -315,7 +379,7 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(2)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
@@ -333,7 +397,7 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(4)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
@@ -351,7 +415,7 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(1)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
@@ -369,7 +433,7 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(3)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
@@ -394,6 +458,7 @@ while True:
                                                  ]}],
                                                  }
                                  })
+        # TODO make the props all in one column
         body['requests'].append({"updateCells": {"fields": "userEnteredValue",
                                                  "range": {"sheetId": worksheetNumber,
                                                            "startColumnIndex": startingIndex - 4,
@@ -413,7 +478,7 @@ while True:
     print('Updated')
 
     website.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + Keys.HOME)
-    time.sleep(.5)
+    time.sleep(1)
     website.driver.find_element(By.CSS_SELECTOR, "div[data-wager-type='REFRESH']").click()
     website.retrieveData()
     website.sortData()
