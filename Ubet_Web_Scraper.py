@@ -30,8 +30,10 @@ def determineChild(child):
 
             if temp == child.find_all('label')[0].text:
                 teamName = temp
+                teamName = formatTeamName(teamName)
             elif 'o' in temp or 'u' in temp:
                 odds = temp
+                odds = odds.replace("½", ".5")
             elif (temp.count('+') + temp.count('-')) == 2:
                 spread = temp
             elif (temp.count('+') + temp.count('-')) == 1:
@@ -44,23 +46,84 @@ def determineChild(child):
 # Function to standardize text formatting across websites
 def formatKey(key):
     key = key.lower()
+    key = key.replace("quarters", "1q")
     key = key.replace("quarter", "q")
     key = key.replace("half", "h")
     key = key.replace("1st", "1")
     key = key.replace("2nd", "2")
     key = key.replace("3rd", "3")
     key = key.replace("4th", "4")
-    key = key.replace("bk", "basketball")
-    key = key.replace("b ", "basketball")
-    key = key.replace("fb", "football")
+    key = key.replace("ncaa basketball", "ncaab")
+    key = key.replace("ncaa football", "ncaaf")
+    key = key.replace("college football", "ncaaf")
+    key = key.replace("margin of victory", "mov")
+    key = key.replace("basketball", "b")
+    key = key.replace("football", "f")
     key = key.replace("(", "")
     key = key.replace(")", "")
     key = key.replace("-", "")
     key = key.replace(" ", "")
     key = key.replace("lines", "")
+    key = key.replace("men", "")
     key = key.replace("nan", "NaN")
     return key
 
+def formatTeamName(name):
+    dictNames = {
+        'ohio state': 'ohiostate',
+        'michigan state': 'michiganstate',
+        'penn state': 'pennstate',
+        'texas a&m': 'texasanm',
+        'western michigan': 'westernmichigan',
+        'air force': 'airforce',
+        'mississippi state': 'mississippistate',
+        'south carolina': 'southcarolina',
+        'iowa state': 'iowastate',
+        'oklahoma state': 'oklahomastate',
+        'kansas state': 'kansasstate',
+        'texas tech': 'texastech',
+        'west virginia': 'westvirginia',
+        'notre dame': 'notredame',
+        'florida state': 'floridastate',
+        'georgia tech': 'georgiatech',
+        'nc state': 'ncstate',
+        'north carolina': 'northcarolina',
+        'virginia tech': 'virginiatech',
+        'boston college': 'bostoncollege',
+        'wake forest': 'wakeforest',
+        'washington state': 'washingtonstate',
+        'oregon state': 'oregonstate',
+        'arizona state': 'arizonastate',
+        'central michigan': 'centralmichigan',
+        'eastern michigan': 'easternmichigan',
+        'central florida': 'centralflorida',
+        'miami ohio': 'miamiohio',
+        'western kentucky': 'westernkentucky',
+        'boise state': 'boisestate',
+        'fresno state': 'fresnostate',
+        'wichita state': 'wichita',
+        'seton hall': 'setonhall',
+        'st johns': 'saintjohns',
+        'saint louis': 'saintlouis',
+        'brigham young': 'byu',
+        'colorado state': 'coloradostate',
+        'louisiana tech': 'louisianatech',
+        'loyola chicago': 'loyolachicago',
+        'miami florida': 'miami',
+        'saint bonaventure': 'saintbonaventure',
+        'saint marys': 'saintmarys',
+        'utah state': 'utahstate',
+        'san francisco': 'sfu',
+        'st marys ca': 'saintmarysca',
+    }
+    name = name.lower()
+    for key in dictNames:
+        if key in name:
+            name = name.replace(key, dictNames[key])
+            break
+    name = name.replace("1h ", "")
+    name = name.replace("1q ", "")
+    return name
 
 # Class to retrieve, sort, and return website data
 class SportDynamic:
@@ -111,6 +174,7 @@ class SportDynamic:
         '''self.driver.quit()'''
 
     def sortData(self):
+        self.allBets = {}
         for event in self.soup.select('div.line'):
             eventType = event.select('h4')[0].text
 
@@ -127,12 +191,13 @@ class SportDynamic:
             bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
             children = event.find_all('div', class_='row py-4')
             
-            for child in children[1:-1]:
+            for child in children:
                 determineChild(child)
-                bettingData["team"].append(formatKey(teamName))
-                bettingData["spread"].append(formatKey(spread))
-                bettingData["odds"].append(formatKey(odds))
-                bettingData["moneyline"].append(formatKey(moneyline))
+                if teamName != "NaN" and teamName != "":
+                    bettingData["team"].append(teamName)
+                    bettingData["spread"].append(spread)
+                    bettingData["odds"].append(odds)
+                    bettingData["moneyline"].append(moneyline)
 
             # sets the betting data of the temporary event
             tempEvent[eventName.text] = bettingData
@@ -188,7 +253,7 @@ while True:
         ubdfNFL = website.displayData(key)
         key = key.lower()
         bagOfWords = key.split()
-        if 'ncaa' in bagOfWords and 'basketball' in bagOfWords:
+        if 'ncaa' in bagOfWords and ('basketball' in bagOfWords or '(b)' in bagOfWords):
             print('NCAA Basketball')
             try:
                 worksheet = sh.get_worksheet(1)
@@ -202,7 +267,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(1)
                 startTime = time.perf_counter() 
-            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
             time.sleep(0.6)
@@ -220,11 +284,10 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(2)
                 startTime = time.perf_counter() 
-            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
             time.sleep(0.6)
-        elif 'ncaa' in bagOfWords and 'football' in bagOfWords:
+        elif 'ncaa' in bagOfWords and ('football' in bagOfWords or '(f)' in bagOfWords):
             print('NCAA Football')
             try:
                 worksheet = sh.get_worksheet(3)
@@ -238,7 +301,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(3)
                 startTime = time.perf_counter() 
-            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
             time.sleep(0.6)
@@ -256,7 +318,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(4)
                 startTime = time.perf_counter() 
-            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
             time.sleep(0.6)

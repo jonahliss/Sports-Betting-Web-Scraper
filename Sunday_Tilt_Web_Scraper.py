@@ -194,8 +194,8 @@ class SportDynamic:
         self.soup = BeautifulSoup(html, "html.parser")
 
     def sortData(self):
-        website.allBets = {}
-        for event in website.soup.select('div.page-lines > div')[:-2]:
+        self.allBets = {}
+        for event in self.soup.select('div.page-lines > div')[:-2]:
             # tries to find the "header-a" tags that hold the event types
             try:
                 eventType = event.find(class_='header-a').div.span.text
@@ -203,7 +203,7 @@ class SportDynamic:
                             event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
                 # creates a new list eventType in the allBets dictionary, which will hold
                 # dicts of the micro betting events
-                website.allBets[eventType] = []
+                self.allBets[eventType] = []
             except:
                 pass
             # create a temporary dictionary to hold the event
@@ -273,7 +273,7 @@ class SportDynamic:
             # sets the betting data of the temporary event
             tempEvent[eventName] = bettingData
             # append onto the list of events, the dict of the micro betting events
-            website.allBets[eventType].append(tempEvent)
+            self.allBets[eventType].append(tempEvent)
 
     def displayData(self, sport):
         df = pd.DataFrame()

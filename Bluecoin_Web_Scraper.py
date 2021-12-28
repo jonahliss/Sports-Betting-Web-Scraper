@@ -24,23 +24,84 @@ def getRange(index):
 # Function to standardize text formatting across websites
 def formatKey(key):
     key = key.lower()
+    key = key.replace("quarters", "1q")
+    key = key.replace("quarter", "q")
+    key = key.replace("half", "h")
+    key = key.replace("1st", "1")
+    key = key.replace("2nd", "2")
+    key = key.replace("3rd", "3")
+    key = key.replace("4th", "4")
+    key = key.replace("ncaa basketball", "ncaab")
+    key = key.replace("ncaa football", "ncaaf")
+    key = key.replace("college football", "ncaaf")
+    key = key.replace("margin of victory", "mov")
+    key = key.replace("basketball", "b")
+    key = key.replace("football", "f")
     key = key.replace("(", "")
     key = key.replace(")", "")
-    key = key.replace(" - ", " ")
-    key = key.replace("1h", "1st half")
-    key = key.replace("2h", "2nd half")
-    key = key.replace("1q", "1st quarter")
-    key = key.replace("qtr", "quarter")
-    key = key.replace("2q", "2nd quarter")
-    key = key.replace("3q", "3rd quarter")
-    key = key.replace("4q", "4th quarter")
-    key = key.replace("bk", "basketball")
-    key = key.replace("b ", "basketball")
-    key = key.replace("fb", "football")
+    key = key.replace("-", "")
+    key = key.replace(" ", "")
     key = key.replace("lines", "")
+    key = key.replace("men", "")
     key = key.replace("nan", "NaN")
     return key
 
+def formatTeamName(name):
+    dictNames = {
+        'ohio state': 'ohiostate',
+        'michigan state': 'michiganstate',
+        'penn state': 'pennstate',
+        'texas a&m': 'texasanm',
+        'western michigan': 'westernmichigan',
+        'air force': 'airforce',
+        'mississippi state': 'mississippistate',
+        'south carolina': 'southcarolina',
+        'iowa state': 'iowastate',
+        'oklahoma state': 'oklahomastate',
+        'kansas state': 'kansasstate',
+        'texas tech': 'texastech',
+        'west virginia': 'westvirginia',
+        'notre dame': 'notredame',
+        'florida state': 'floridastate',
+        'georgia tech': 'georgiatech',
+        'nc state': 'ncstate',
+        'north carolina': 'northcarolina',
+        'virginia tech': 'virginiatech',
+        'boston college': 'bostoncollege',
+        'wake forest': 'wakeforest',
+        'washington state': 'washingtonstate',
+        'oregon state': 'oregonstate',
+        'arizona state': 'arizonastate',
+        'central michigan': 'centralmichigan',
+        'eastern michigan': 'easternmichigan',
+        'central florida': 'centralflorida',
+        'miami ohio': 'miamiohio',
+        'western kentucky': 'westernkentucky',
+        'boise state': 'boisestate',
+        'fresno state': 'fresnostate',
+        'wichita state': 'wichita',
+        'seton hall': 'setonhall',
+        'st johns': 'saintjohns',
+        'saint louis': 'saintlouis',
+        'brigham young': 'byu',
+        'colorado state': 'coloradostate',
+        'louisiana tech': 'louisianatech',
+        'loyola chicago': 'loyolachicago',
+        'miami florida': 'miami',
+        'saint bonaventure': 'saintbonaventure',
+        'saint marys': 'saintmarys',
+        'utah state': 'utahstate',
+        'san francisco': 'sfu',
+        'st marys ca': 'saintmarysca',
+    }
+    name = name.lower()
+    for key in dictNames:
+        if key in name:
+            name = name.replace(key, dictNames[key])
+            break
+    name = name.replace("1h ", "")
+    name = name.replace("1q ", "")
+    return name
 
 # Class to retrieve, sort, and return website data
 class SportDynamic:
@@ -133,6 +194,7 @@ class SportDynamic:
                     try:
                         eventID = cols[2].text
                         teamName = cols[3].text
+                        teamName = formatTeamName(teamName)
                     except:
                         # if eventID not found, it is not a valid event
                         continue
@@ -156,17 +218,17 @@ class SportDynamic:
                         eventName = str(eventID) + ": " + teamName
                         isNew = False
                         prevID = eventID
-                        bettingData["team"].append(formatKey(teamName))
-                        bettingData["spread"].append(formatKey(spread))
-                        bettingData["odds"].append(formatKey(odds))
-                        bettingData["moneyline"].append(formatKey(moneyline))
+                        bettingData["team"].append(teamName)
+                        bettingData["spread"].append(spread)
+                        bettingData["odds"].append(odds)
+                        bettingData["moneyline"].append(moneyline)
                     # eventID has already been reached, so append the data onto list of all events
                     else:
                         isNew = True
-                        bettingData["team"].append(formatKey(teamName))
-                        bettingData["spread"].append(formatKey(spread))
-                        bettingData["odds"].append(formatKey(odds))
-                        bettingData["moneyline"].append(formatKey(moneyline))
+                        bettingData["team"].append(teamName)
+                        bettingData["spread"].append(spread)
+                        bettingData["odds"].append(odds)
+                        bettingData["moneyline"].append(moneyline)
                         tempEvent[eventName] = bettingData
                 # append onto the list of events, the dict of the micro betting events
                 self.allBets[eventType].append(tempEvent)
@@ -177,6 +239,7 @@ class SportDynamic:
                     bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
                     eventName = cols[4].text
                     teamName = cols[4].text
+                    teamName = formatTeamName(teamName)
                     
                     for i in range(5, 8):
                         try:
@@ -216,7 +279,7 @@ class SportDynamic:
         self.retrieveData()
         self.sortData()
         
-
+#%%
 # Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
@@ -251,7 +314,7 @@ while True:
 
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
-        key = formatKey(key)
+        key = key.lower()
         bagOfWords = key.split()
         if 'ncaa' and 'bk' in bagOfWords or 'ncaa' and 'basketball' in bagOfWords or 'college' and 'basketball' in bagOfWords:
             print('NCAA Basketball')
