@@ -190,7 +190,14 @@ scraping_list_NFL = [[4, 0, 'nfl', 'football/88670561'],
                      [4, 15, 'nfl1q', 'football/88670561?category=quarters&subcategory=1st-quarter'],
                      [4, 20, 'nfl2q', 'football/88670561?category=quarters&subcategory=2nd-quarter'],
                      [4, 25, 'nfl3q', 'football/88670561?category=quarters&subcategory=3rd-quarter'],
-                     [4, 30, 'nfl4q', 'football/88670561?category=quarters&subcategory=4th-quarter']]
+                     [4, 30, 'nfl4q', 'football/88670561?category=quarters&subcategory=4th-quarter'],
+                     [4, 35, 'nflpropspoints', 'football/88670561?category=player-props&subcategory=points'],
+                     [4, 40, 'nflpropsrebounds', 'football/88670561?category=player-props&subcategory=rebounds'],
+                     [4, 45, 'nflpropsassists', 'football/88670561?category=player-props&subcategory=assists'],
+                     [4, 50, 'nflpropsthrees', 'football/88670561?category=player-props&subcategory=threes'],
+                     [4, 55, 'nflpropsblocks', 'football/88670561?category=player-props&subcategory=blocks'],
+                     [4, 60, 'nflpropssteals', 'football/88670561?category=player-props&subcategory=steals'],
+                     [4, 65, 'nflpropsturnovers', 'football/88670561?category=player-props&subcategory=turnovers']]
 
 scraping_list_CFB = [[3, 0, 'ncaaf', 'football/88670775'],
                      [3, 5, 'ncaaf1h', 'football/88670775?category=halves&subcategory=1st-half'],
@@ -198,7 +205,14 @@ scraping_list_CFB = [[3, 0, 'ncaaf', 'football/88670775'],
                      [3, 15, 'ncaaf1q', 'football/88670775?category=quarters&subcategory=1st-quarter'],
                      [3, 20, 'ncaaf2q', 'football/88670775?category=quarters&subcategory=2nd-quarter'],
                      [3, 25, 'ncaaf3q', 'football/88670775?category=quarters&subcategory=3rd-quarter'],
-                     [3, 30, 'ncaaf4q', 'football/88670775?category=quarters&subcategory=4th-quarter']]
+                     [3, 30, 'ncaaf4q', 'football/88670775?category=quarters&subcategory=4th-quarter'],
+                     [3, 35, 'ncaafpropspoints', 'football/88670775?category=player-props&subcategory=points'],
+                     [3, 40, 'ncaafpropsrebounds', 'football/88670775?category=player-props&subcategory=rebounds'],
+                     [3, 45, 'ncaafpropsassists', 'football/88670775?category=player-props&subcategory=assists'],
+                     [3, 50, 'ncaafpropsthrees', 'football/88670775?category=player-props&subcategory=threes'],
+                     [3, 55, 'ncaafpropsblocks', 'football/88670775?category=player-props&subcategory=blocks'],
+                     [3, 60, 'ncaafpropssteals', 'football/88670775?category=player-props&subcategory=steals'],
+                     [3, 65, 'ncaafpropsturnovers', 'football/88670775?category=player-props&subcategory=turnovers']]
 
 scraping_list_NBA = [[2, 0, 'nba', 'basketball/88670846'],
                      [2, 5, 'nba1h', 'basketball/88670846?category=halves&subcategory=1st-half'],
@@ -221,7 +235,14 @@ scraping_list_CBB = [[1, 0, 'ncaab', 'basketball/88670771', 'B:E', 1],
                      [1, 15, 'ncaab1q', 'basketball/88670771?category=quarters&subcategory=1st-quarter'],
                      [1, 20, 'ncaab2q', 'basketball/88670771?category=quarters&subcategory=2nd-quarter'],
                      [1, 25, 'ncaab3q', 'basketball/88670771?category=quarters&subcategory=3rd-quarter'],
-                     [1, 30, 'ncaab4q', 'basketball/88670771?category=quarters&subcategory=4th-quarter']]
+                     [1, 30, 'ncaab4q', 'basketball/88670771?category=quarters&subcategory=4th-quarter'],
+                     [1, 35, 'ncaabpropspoints', 'basketball/88670771?category=player-props&subcategory=points'],
+                     [1, 40, 'ncaabpropsrebounds', 'basketball/88670771?category=player-props&subcategory=rebounds'],
+                     [1, 45, 'ncaabpropsassists', 'basketball/88670771?category=player-props&subcategory=assists'],
+                     [1, 50, 'ncaabpropsthrees', 'basketball/88670771?category=player-props&subcategory=threes'],
+                     [1, 55, 'ncaabpropsblocks', 'basketball/88670771?category=player-props&subcategory=blocks'],
+                     [1, 60, 'ncaabpropssteals', 'basketball/88670771?category=player-props&subcategory=steals'],
+                     [1, 65, 'ncaabpropsturnovers', 'basketball/88670771?category=player-props&subcategory=turnovers']]
 
 # Determining sports and leageus to scrape
 options = input('CBB, NBA, CFB, NFL\nWhat data do you want to scrape? ')
@@ -277,5 +298,5 @@ while True:
             for element in row:
                 rowData['values'].append({"userEnteredValue": {"stringValue": element}})
             body['requests'][-1]['updateCells']['rows'].append(rowData)
-    sh.batch_update(body)
+        sh.batch_update(body)
     print('Updated')
