@@ -370,7 +370,7 @@ while True:
     startingIndexNFL = 600
     startingIndex = 600
     body = {"requests": []}
-    checkProps = {'isProps': False, 'didSetProps': False, 'propsCol': -1, 'propsRow': 0}
+    checkProps = {'isProps': False, 'didSetProps': [], 'propsCols': [], 'propsRows': [], 'propsLeagues': []}
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = key.lower()
@@ -404,7 +404,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(2)
                 startTime = time.perf_counter()
-            worksheetNumber = 1
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
             time.sleep(0.6)
@@ -422,7 +421,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(4)
                 startTime = time.perf_counter()
-            worksheetNumber = 1
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
             time.sleep(0.6)
@@ -441,7 +439,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(1)
                 startTime = time.perf_counter()
-            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
             time.sleep(0.6)
@@ -459,28 +456,34 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(3)
                 startTime = time.perf_counter()
-            worksheetNumber = 1
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
             time.sleep(0.6)
         else:
             continue
         key = formatKey(key)
+        # checks if the props for each league is new, and if so, resets the starting column and row
+        if worksheet.id not in checkProps['propsLeagues']:
+            checkProps['propsLeagues'].append(worksheet.id)
+            checkProps['propsCols'].append(-1)
+            checkProps['propsRows'].append(0)
+            checkProps['didSetProps'].append(False)
+        leagueIndex = checkProps['propsLeagues'].index(worksheet.id)
         # find the unique spreadsheet id
         worksheetNumber = worksheet.id
         values = [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()
         if checkProps['isProps']:
             # set the props column index to the first time a props event appears
-            if not checkProps['didSetProps']:
-                checkProps['didSetProps'] = True
-                checkProps['propsCol'] = startingIndex - 5
+            if not checkProps['didSetProps'][leagueIndex]:
+                checkProps['didSetProps'][leagueIndex] = True
+                checkProps['propsCols'][leagueIndex] = startingIndex - 5
             # update the body dictionary to a single column
             body['requests'].append({"updateCells": {"fields": "userEnteredValue",
                                                      "range": {"sheetId": worksheetNumber,
-                                                               "startColumnIndex": checkProps['propsCol'],
-                                                               "startRowIndex": checkProps['propsRow'],
-                                                               "endRowIndex": checkProps['propsRow'] + 2,
-                                                               "endColumnIndex": checkProps['propsCol'] + 1,
+                                                               "startColumnIndex": checkProps['propsCols'][leagueIndex],
+                                                               "startRowIndex": checkProps['propsRows'][leagueIndex],
+                                                               "endRowIndex": checkProps['propsRows'][leagueIndex] + 2,
+                                                               "endColumnIndex": checkProps['propsCols'][leagueIndex] + 1,
                                                                },
                                                      "rows": [{"values": [
                                                          {"userEnteredValue": {"stringValue": key}}
@@ -491,14 +494,14 @@ while True:
                                      })
             body['requests'].append({"updateCells": {"fields": "userEnteredValue",
                                                      "range": {"sheetId": worksheetNumber,
-                                                               "startColumnIndex": checkProps['propsCol'] + 1,
-                                                               "startRowIndex": checkProps['propsRow'],
-                                                               "endColumnIndex": checkProps['propsCol'] + 5,
+                                                               "startColumnIndex": checkProps['propsCols'][leagueIndex] + 1,
+                                                               "startRowIndex": checkProps['propsRows'][leagueIndex],
+                                                               "endColumnIndex": checkProps['propsCols'][leagueIndex] + 5,
                                                                },
                                                      "rows": [],
                                                      }
                                      })
-            checkProps['propsRow'] += len(values)
+            checkProps['propsRows'][leagueIndex] += len(values)
         # create body for the google sheets batch update api
         else:
             body['requests'].append({"updateCells": {"fields": "userEnteredValue",
