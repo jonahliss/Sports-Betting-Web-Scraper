@@ -380,8 +380,8 @@ while True:
                 worksheet = sh.get_worksheet(2)
                 startTime = time.perf_counter()
             worksheetNumber = 1
-            startingIndexCBB += 5
-            startingIndex = startingIndexCBB
+            startingIndexNBA += 5
+            startingIndex = startingIndexNBA
             time.sleep(0.6)
         elif isNFL:
             print('NFL')
@@ -398,8 +398,8 @@ while True:
                 worksheet = sh.get_worksheet(4)
                 startTime = time.perf_counter()
             worksheetNumber = 1
-            startingIndexCBB += 5
-            startingIndex = startingIndexCBB
+            startingIndexNFL += 5
+            startingIndex = startingIndexNFL
             time.sleep(0.6)
         elif 'basketball' in bagOfWords or (isCollege and 'ncaab' in bagOfWords):
             print('NCAA Basketball')
@@ -434,8 +434,8 @@ while True:
                 worksheet = sh.get_worksheet(3)
                 startTime = time.perf_counter()
             worksheetNumber = 1
-            startingIndexCBB += 5
-            startingIndex = startingIndexCBB
+            startingIndexCFB += 5
+            startingIndex = startingIndexCFB
             time.sleep(0.6)
         else:
             continue

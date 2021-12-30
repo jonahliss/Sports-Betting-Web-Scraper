@@ -46,6 +46,7 @@ def formatKey(key):
     key = key.replace("nan", "NaN")
     return key
 
+
 def formatTeamName(name):
     dictNames = {
         'ohio state': 'ohiostate',
@@ -103,6 +104,7 @@ def formatTeamName(name):
     name = name.replace(" 1q", "")
     return name
 
+
 # Class to retrieve, sort, and return website data
 class SportDynamic:
     def __init__(self, url, options):
@@ -134,7 +136,8 @@ class SportDynamic:
                 time.sleep(.5)
                 subsports = sport.find_elements(By.CSS_SELECTOR, "ul > li")
                 for subsport in subsports:
-                    if "PROPS" not in subsport.text and ("NBA" in subsport.text or "NFL" in subsport.text or "NCAA" in subsport.text):
+                    if "PROPS" not in subsport.text and (
+                            "NBA" in subsport.text or "NFL" in subsport.text or "NCAA" in subsport.text):
                         try:
                             subsport.find_element(By.CSS_SELECTOR, "a").click()
                         except:
@@ -158,25 +161,26 @@ class SportDynamic:
             isNew = True
             # TODO fix for futures, not just h2h matchups
             # checks first header row to see if it is a prop, future, or h2h matchup
-            # 0 is prop, 1 is future, 2 is h2h
-            gameType = -1
+            gameType = 'NaN'
             numHeaders = len(panelRows[0].select('div'))
             if numHeaders >= 6:
-                gameType = 2
+                gameType = 'h2h'
             elif numHeaders == 5:
-                gameType = 1
+                gameType = 'future'
             else:
-                gameType = 0
+                gameType = 'prop'
 
             try:
-                if gameType == 2:
+                if gameType == 'h2h':
                     eventType = event.find(class_='panel-title linesPanelTitle').text
                     # creates a new list eventType in the allBets dictionary, which will hold
                     # dicts of the micro betting events
-                elif gameType == 1:
-                    eventType = event.find('h6').text
-                elif gameType == 0:
+                elif gameType == 'future':
+                    eventType = event.find(class_='row gameDate').text
+                    eventType += ' futures'
+                elif gameType == 'prop':
                     eventType = event.find_all(class_='row gameDate')[1].text
+                    eventType += ' props'
                 self.allBets[eventType] = []
             # if no attribute of event is found, then
             # set attr to empty string
@@ -184,7 +188,7 @@ class SportDynamic:
                 pass
 
             # finds the betting data for the h2h matchups
-            if gameType == 2:
+            if gameType == 'h2h':
                 for row in panelRows:
                     # gets the eventID
                     try:
@@ -235,7 +239,7 @@ class SportDynamic:
                         bettingData["moneyline"].append(moneyline)
                         tempEvent[eventName] = bettingData
             # finds betting data for futures
-            elif gameType == 1:
+            elif gameType == 'future':
                 futuresD = event.find(class_='panel-body').find_all(class_='betting-lines-container tnt row')
                 for row in event.find(class_='panel-body').find_all(class_='betting-lines-container tnt row'):
                     # gets the eventID
@@ -263,7 +267,7 @@ class SportDynamic:
                     bettingData["moneyline"].append(moneyline)
                     tempEvent[eventName] = bettingData
             # finds betting data for props
-            elif gameType == 0:
+            elif gameType == 'prop':
                 propsD = panelRows
                 for row in panelRows:
                     # gets the eventID
@@ -312,16 +316,15 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         self.sortData()
-    
-#%%
+
+
+# %%
 # Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 
-
 # Determining sports and leageus to scrape
 options = input('basketball, football\nWhat data do you want to scrape? ')
-
 
 # Executing scraping process
 website = SportDynamic('https://www.purewage.com/', options)
@@ -355,7 +358,7 @@ listCollegeTeams = ['ohio st', 'michigan', 'michigan st', 'penn st', 'wisconsin'
                     'saint johns', 'saint bonaventure', 'saint marys', 'pepperdine', 'uab', 'usf', 'utah st', 'vcu',
                     'xavier', 'marquette', 'san francisco', 'hawaii', 'unlv', 'ncaa', 'college', 'ncaaf', 'ncaab']
 
-startTime = time.perf_counter() 
+startTime = time.perf_counter()
 
 while True:
 
@@ -367,7 +370,7 @@ while True:
     startingIndexNFL = 600
     startingIndex = 600
     body = {"requests": []}
-    # TODO purewage missing basketball in allbets dict
+    checkProps = {'isProps': False, 'didSetProps': False, 'propsCol': -1, 'propsRow': 0}
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = key.lower()
@@ -375,6 +378,7 @@ while True:
         isCollege = False
         isNFL = False
         isNBA = False
+        checkProps['isProps'] = 'props' in bagOfWords or 'futures' in bagOfWords
         # checks if the event name is a college event
         for temp in bagOfWords:
             if temp in listNFLteams:
@@ -399,10 +403,10 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(2)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
-            startingIndexCBB += 5
-            startingIndex = startingIndexCBB
+            startingIndexNBA += 5
+            startingIndex = startingIndexNBA
             time.sleep(0.6)
         elif isNFL:
             print('NFL')
@@ -417,10 +421,10 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(4)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
-            startingIndexCBB += 5
-            startingIndex = startingIndexCBB
+            startingIndexNFL += 5
+            startingIndex = startingIndexNFL
             time.sleep(0.6)
         # TODO fix college identifation
         elif 'basketball' in bagOfWords or (isCollege and 'ncaab' in bagOfWords):
@@ -436,7 +440,7 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(1)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
@@ -454,41 +458,72 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(3)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
-            startingIndexCBB += 5
-            startingIndex = startingIndexCBB
+            startingIndexCFB += 5
+            startingIndex = startingIndexCFB
             time.sleep(0.6)
         else:
             continue
         key = formatKey(key)
         # find the unique spreadsheet id
         worksheetNumber = worksheet.id
-        # create body for the google sheets batch update api
-        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
-                                                 "range": {"sheetId": worksheetNumber,
-                                                           "startColumnIndex": startingIndex - 5,
-                                                           "startRowIndex": 0,
-                                                           "endRowIndex": 2,
-                                                           "endColumnIndex": startingIndex - 4,
-                                                           },
-                                                 "rows": [{"values": [
-                                                     {"userEnteredValue": {"stringValue": key}}
-                                                 ]}, {"values": [
-                                                     {"userEnteredValue": {"stringValue": "Purewage"}}
-                                                 ]}],
-                                                 }
-                                 })
-        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
-                                                 "range": {"sheetId": worksheetNumber,
-                                                           "startColumnIndex": startingIndex - 4,
-                                                           "startRowIndex": 0,
-                                                           "endColumnIndex": startingIndex,
-                                                           },
-                                                 "rows": [],
-                                                 }
-                                 })
         values = [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()
+        if checkProps['isProps']:
+            # set the props column index to the first time a props event appears
+            if not checkProps['didSetProps']:
+                checkProps['didSetProps'] = True
+                checkProps['propsCol'] = startingIndex - 5
+            # update the body dictionary to a single column
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": checkProps['propsCol'],
+                                                               "startRowIndex": checkProps['propsRow'],
+                                                               "endRowIndex": checkProps['propsRow'] + 2,
+                                                               "endColumnIndex": checkProps['propsCol'] + 1,
+                                                               },
+                                                     "rows": [{"values": [
+                                                         {"userEnteredValue": {"stringValue": key}}
+                                                     ]}, {"values": [
+                                                         {"userEnteredValue": {"stringValue": "Purewage props"}}
+                                                     ]}
+                                                     ], }
+                                     })
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": checkProps['propsCol'] + 1,
+                                                               "startRowIndex": checkProps['propsRow'],
+                                                               "endColumnIndex": checkProps['propsCol'] + 5,
+                                                               },
+                                                     "rows": [],
+                                                     }
+                                     })
+            checkProps['propsRow'] += len(values)
+        # create body for the google sheets batch update api
+        else:
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": startingIndex - 5,
+                                                               "startRowIndex": 0,
+                                                               "endRowIndex": 2,
+                                                               "endColumnIndex": startingIndex - 4,
+                                                               },
+                                                     "rows": [{"values": [
+                                                         {"userEnteredValue": {"stringValue": key}}
+                                                     ]}, {"values": [
+                                                         {"userEnteredValue": {"stringValue": "Purewage"}}
+                                                     ]}
+                                                     ], }
+                                     })
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": startingIndex - 4,
+                                                               "startRowIndex": 0,
+                                                               "endColumnIndex": startingIndex,
+                                                               },
+                                                     "rows": [],
+                                                     }
+                                     })
         for row in values:
             rowData = {"values": []}
             for element in row:
