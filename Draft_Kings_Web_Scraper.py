@@ -149,7 +149,10 @@ class SportStatic:
                     props = prop.find_all(class_='sportsbook-table__column-row')
                     self.teams_list.append(props[0].text)
                     self.spreads_list.append(props[1].text)
-                    self.odds_list.append(props[2].text)
+                    odds = props[2].text.replace('O', 'o')
+                    odds = odds.replace('U', 'u')
+                    odds = odds.replace('\xa0', '')
+                    self.odds_list.append(odds)
                     self.moneylines_list.append('NaN')
         else:
             for event in self.soup.select('div.parlay-card-10-a'):
@@ -172,6 +175,7 @@ class SportStatic:
         return self.df
 
 
+#%%
 # Launching automated Chrome Browser
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
@@ -247,7 +251,6 @@ scraping_list_CBB = [[1, 0, 'ncaab', 'basketball/88670771', 'B:E', 1],
 # Determining sports and leageus to scrape
 options = input('CBB, NBA, CFB, NFL\nWhat data do you want to scrape? ')
 scraping_list = []
-body = {"requests": []}
 
 if 'CBB' in options:
     scraping_list += scraping_list_CBB
@@ -260,6 +263,7 @@ if 'NFL' in options:
 
 # Executing scraping process
 while True:
+    body = {"requests": []}
     for item in scraping_list:
         # Select Appropriate Spreadsheet
         worksheetNumber = sh.get_worksheet(item[0]).id
@@ -298,5 +302,5 @@ while True:
             for element in row:
                 rowData['values'].append({"userEnteredValue": {"stringValue": element}})
             body['requests'][-1]['updateCells']['rows'].append(rowData)
-        sh.batch_update(body)
+    sh.batch_update(body)
     print('Updated')
