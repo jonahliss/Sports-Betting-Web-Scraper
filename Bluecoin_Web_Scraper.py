@@ -46,6 +46,7 @@ def formatKey(key):
     key = key.replace("nan", "NaN")
     return key
 
+
 def formatTeamName(name):
     dictNames = {
         'ohio state': 'ohiostate',
@@ -102,6 +103,7 @@ def formatTeamName(name):
     name = name.replace("1h ", "")
     name = name.replace("1q ", "")
     return name
+
 
 # Class to retrieve, sort, and return website data
 class SportDynamic:
@@ -160,12 +162,6 @@ class SportDynamic:
     def sortData(self):
         self.allBets = {}
         for event in self.soup.select('table > tbody')[1:41]:
-            # try to find the event type in the first td element of the table
-            try:
-                eventType = event.find('td').text
-                self.allBets[eventType] = []
-            except:
-                pass
 
             # create a temporary dictionary to hold the event
             tempEvent = {}
@@ -176,18 +172,24 @@ class SportDynamic:
                 tableRows.append(temp)
             # include the futures rows?
             tableFutureRows = event.select('tr.TrTntDetail')
+            # try to find the event type in the first td element of the table
+            try:
+                eventType = event.find('td').text
+                unknownEventTypeList = []
+            except:
+                pass
 
             # variables to help identify new team matchups
             prevID = -1
             isNew = True
-            
+
             teamName = "NaN"
             spread = "NaN"
             odds = "NaN"
             moneyline = "NaN"
-            
-            if len(tableRows) > 1:
 
+            # iterate through all the game lines and props events
+            if len(tableRows) > 1:
                 for row in tableRows:
                     cols = row.select('td')
                     # gets the eventID
@@ -198,7 +200,7 @@ class SportDynamic:
                     except:
                         # if eventID not found, it is not a valid event
                         continue
-                        
+
                     for i in range(4, 7):
                         try:
                             temp = cols[i].text
@@ -230,17 +232,24 @@ class SportDynamic:
                         bettingData["odds"].append(odds)
                         bettingData["moneyline"].append(moneyline)
                         tempEvent[eventName] = bettingData
-                # append onto the list of events, the dict of the micro betting events
-                self.allBets[eventType].append(tempEvent)
+                        countNan = 0
+                        for dataPoint in bettingData:
+                            if "NaN" in bettingData[dataPoint]:
+                                countNan += 1
+                        if countNan >= 2:
+                            eventType += ' props'
+                    # append onto the list of events, the dict of the micro betting events
+                unknownEventTypeList.append(tempEvent)
 
             else:  # iterate through the futures
+                eventType += ' futures'
                 for row in tableFutureRows:
                     cols = row.select('td')
                     bettingData = {"team": [], "spread": [], "odds": [], "moneyline": []}
                     eventName = cols[4].text
                     teamName = cols[4].text
                     teamName = formatTeamName(teamName)
-                    
+
                     for i in range(5, 8):
                         try:
                             temp = cols[i].text
@@ -260,7 +269,8 @@ class SportDynamic:
                     bettingData["moneyline"].append(moneyline)
                     tempEvent[eventName] = bettingData
                     # append onto the list of events, the dict of the micro betting events
-                    self.allBets[eventType].append(tempEvent)
+                unknownEventTypeList.append(tempEvent)
+            self.allBets[eventType] = unknownEventTypeList
 
     def displayData(self, sport):
         df = pd.DataFrame()
@@ -278,31 +288,30 @@ class SportDynamic:
         self.navigateDriver()
         self.retrieveData()
         self.sortData()
-        
-#%%
+
+
+# %%
 # Establishing connection with Google Sheets
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
-
 
 # Determining sports and leageus to scrape
 options = input('CFB, NFL, CBB, NBA\nWhat data do you want to scrape? ')
 
 if 'CFB' in options:
     options += 'COLLEGE FOOTBALL, NCAA FB, NCAA FOOTBALL'
-    
+
 if 'CBB' in options:
     options += 'COLLEGE BASKETBALL, NCAA BK, NCAA BASKETBALL'
-
 
 # Executing scraping process
 website = SportDynamic('http://bluecoin.ag/core/mobile/', options)
 website.collectData()
 
-startTime = time.perf_counter() 
+startTime = time.perf_counter()
 
 while True:
-    
+
     print('Starting')
 
     startingIndexCBB = 2400
@@ -311,11 +320,13 @@ while True:
     startingIndexNFL = 2400
     startingIndex = 2400
     body = {"requests": []}
+    checkProps = {'isProps': False, 'didSetProps': [], 'propsCols': [], 'propsRows': [], 'propsLeagues': []}
 
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
         key = key.lower()
         bagOfWords = key.split()
+        checkProps['isProps'] = 'props' in bagOfWords or 'futures' in bagOfWords
         if 'ncaa' and 'bk' in bagOfWords or 'ncaa' and 'basketball' in bagOfWords or 'college' and 'basketball' in bagOfWords:
             print('NCAA Basketball')
             try:
@@ -329,7 +340,7 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(1)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
@@ -347,7 +358,7 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(2)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 2
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
@@ -365,7 +376,7 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(3)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 3
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
@@ -383,42 +394,83 @@ while True:
                 gc = gspread.service_account(filename='credentials.json')
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(4)
-                startTime = time.perf_counter() 
+                startTime = time.perf_counter()
             worksheetNumber = 4
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
             time.sleep(0.6)
         else:
             continue
-            
+
         key = formatKey(key)
+        # checks if the props for each league is new, and if so, resets the starting column and row
+        if worksheet.id not in checkProps['propsLeagues']:
+            checkProps['propsLeagues'].append(worksheet.id)
+            checkProps['propsCols'].append(-1)
+            checkProps['propsRows'].append(0)
+            checkProps['didSetProps'].append(False)
+        leagueIndex = checkProps['propsLeagues'].index(worksheet.id)
         # find the unique spreadsheet id
         worksheetNumber = worksheet.id
-        # create body for the google sheets batch update api
-        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
-                                                 "range": {"sheetId": worksheetNumber,
-                                                           "startColumnIndex": startingIndex - 5,
-                                                           "startRowIndex": 0,
-                                                           "endRowIndex": 2,
-                                                           "endColumnIndex": startingIndex - 4,
-                                                           },
-                                                 "rows": [{"values": [
-                                                     {"userEnteredValue": {"stringValue": key}}
-                                                 ]}, {"values": [
-                                                     {"userEnteredValue": {"stringValue": "Bluecoin"}}
-                                                 ]}],
-                                                 }
-                                 })
-        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
-                                                 "range": {"sheetId": worksheetNumber,
-                                                           "startColumnIndex": startingIndex - 4,
-                                                           "startRowIndex": 0,
-                                                           "endColumnIndex": startingIndex,
-                                                           },
-                                                 "rows": [],
-                                                 }
-                                 })
         values = [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()
+        # create body for the google sheets batch update api
+        if checkProps['isProps']:
+            # set the props column index to the first time a props event appears
+            if not checkProps['didSetProps'][leagueIndex]:
+                checkProps['didSetProps'][leagueIndex] = True
+                checkProps['propsCols'][leagueIndex] = startingIndex - 5
+            # update the body dictionary to a single column
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": checkProps['propsCols'][leagueIndex],
+                                                               "startRowIndex": checkProps['propsRows'][leagueIndex],
+                                                               "endRowIndex": checkProps['propsRows'][leagueIndex] + 2,
+                                                               "endColumnIndex": checkProps['propsCols'][
+                                                                                     leagueIndex] + 1,
+                                                               },
+                                                     "rows": [{"values": [
+                                                         {"userEnteredValue": {"stringValue": key}}
+                                                     ]}, {"values": [
+                                                         {"userEnteredValue": {"stringValue": "Bluecoin props"}}
+                                                     ]}
+                                                     ], }
+                                     })
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": checkProps['propsCols'][
+                                                                                       leagueIndex] + 1,
+                                                               "startRowIndex": checkProps['propsRows'][leagueIndex],
+                                                               "endColumnIndex": checkProps['propsCols'][
+                                                                                     leagueIndex] + 5,
+                                                               },
+                                                     "rows": [],
+                                                     }
+                                     })
+            checkProps['propsRows'][leagueIndex] += len(values)
+        else:
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": startingIndex - 5,
+                                                               "startRowIndex": 0,
+                                                               "endRowIndex": 2,
+                                                               "endColumnIndex": startingIndex - 4,
+                                                               },
+                                                     "rows": [{"values": [
+                                                         {"userEnteredValue": {"stringValue": key}}
+                                                     ]}, {"values": [
+                                                         {"userEnteredValue": {"stringValue": "Bluecoin"}}
+                                                     ]}],
+                                                     }
+                                     })
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": startingIndex - 4,
+                                                               "startRowIndex": 0,
+                                                               "endColumnIndex": startingIndex,
+                                                               },
+                                                     "rows": [],
+                                                     }
+                                     })
         for row in values:
             rowData = {"values": []}
             for element in row:

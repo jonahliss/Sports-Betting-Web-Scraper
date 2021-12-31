@@ -207,7 +207,7 @@ class SportDynamic:
                     bettingData["odds"].append(odds)
                     bettingData["moneyline"].append(moneyline)
 
-            if not eventType in self.allBets:
+            if eventType not in self.allBets:
                 self.allBets[eventType] = []
             # sets the betting data of the temporary event
             tempEvent[eventName.text] = bettingData

@@ -202,8 +202,6 @@ class SportDynamic:
                 eventType = eventType + " " + \
                             event.find(class_='header-a').find(class_='league-icon').i['class'][0].split('-')[1]
                 # creates a new list eventType in the allBets dictionary, which will hold
-                # dicts of the micro betting events
-                self.allBets[eventType] = []
             except:
                 pass
             # create a temporary dictionary to hold the event
@@ -237,6 +235,8 @@ class SportDynamic:
                 bettingData["spread"].append(spread)
                 bettingData["odds"].append(odds)
                 bettingData["moneyline"].append(moneyline)
+                if 'props' not in eventType:
+                    eventType += ' props'
 
             else:
                 for team in teams:
@@ -272,6 +272,9 @@ class SportDynamic:
 
             # sets the betting data of the temporary event
             tempEvent[eventName] = bettingData
+            # dicts of the micro betting events
+            if eventType not in self.allBets:
+                self.allBets[eventType] = []
             # append onto the list of events, the dict of the micro betting events
             self.allBets[eventType].append(tempEvent)
 
@@ -301,9 +304,10 @@ sh = gc.open("BettingScraper")
 # Executing scraping process
 website = SportDynamic('https://www.sundaytilt.com/')
 website.collectData()
+
 #%%
 
-listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super bowl', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
+listNFLteams = ['afc', 'nfc', 'nfl', 'division', 'super', 'mvp', 'cardinals', 'falcons', 'ravens', 'bills', 'panthers',
                 'bears', 'bengals', 'browns', 'cowboys', 'broncos',
                 'lions', 'packers', 'texans', 'colts', 'jaguars',
                 'chiefs', 'chargers', 'rams', 'dolphins', 'vikings',
@@ -346,6 +350,7 @@ while True:
     startingIndexNFL = 1200
     startingIndex = 1200
     body = {"requests": []}
+    checkProps = {'isProps': False, 'didSetProps': [], 'propsCols': [], 'propsRows': [], 'propsLeagues': []}
 
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
@@ -354,6 +359,7 @@ while True:
         isCollege = False
         isNFL = False
         isNBA = False
+        checkProps['isProps'] = 'props' in bagOfWords or 'futures' in bagOfWords
         # checks if the event name is a college event
         for temp in bagOfWords:
             if temp in listNFLteams:
@@ -379,7 +385,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(2)
                 startTime = time.perf_counter()
-            worksheetNumber = 1
             startingIndexNBA += 5
             startingIndex = startingIndexNBA
             time.sleep(0.6)
@@ -397,7 +402,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(4)
                 startTime = time.perf_counter()
-            worksheetNumber = 1
             startingIndexNFL += 5
             startingIndex = startingIndexNFL
             time.sleep(0.6)
@@ -415,7 +419,6 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(1)
                 startTime = time.perf_counter()
-            worksheetNumber = 1
             startingIndexCBB += 5
             startingIndex = startingIndexCBB
             time.sleep(0.6)
@@ -433,41 +436,78 @@ while True:
                 sh = gc.open("BettingScraper")
                 worksheet = sh.get_worksheet(3)
                 startTime = time.perf_counter()
-            worksheetNumber = 1
             startingIndexCFB += 5
             startingIndex = startingIndexCFB
             time.sleep(0.6)
         else:
             continue
         key = formatKey(key)
+        # checks if the props for each league is new, and if so, resets the starting column and row
+        if worksheet.id not in checkProps['propsLeagues']:
+            checkProps['propsLeagues'].append(worksheet.id)
+            checkProps['propsCols'].append(-1)
+            checkProps['propsRows'].append(0)
+            checkProps['didSetProps'].append(False)
+        leagueIndex = checkProps['propsLeagues'].index(worksheet.id)
         # find the unique spreadsheet id
         worksheetNumber = worksheet.id
-        # create body for the google sheets batch update api
-        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
-                                                 "range": {"sheetId": worksheetNumber,
-                                                           "startColumnIndex": startingIndex - 5,
-                                                           "startRowIndex": 0,
-                                                           "endRowIndex": 2,
-                                                           "endColumnIndex": startingIndex - 4,
-                                                           },
-                                                 "rows": [{"values": [
-                                                     {"userEnteredValue": {"stringValue": key}}
-                                                 ]}, {"values": [
-                                                     {"userEnteredValue": {"stringValue": "Sundaytilt"}}
-                                                 ]}],
-                                                 }
-                                 })
-        # TODO make the props all in one column
-        body['requests'].append({"updateCells": {"fields": "userEnteredValue",
-                                                 "range": {"sheetId": worksheetNumber,
-                                                           "startColumnIndex": startingIndex - 4,
-                                                           "startRowIndex": 0,
-                                                           "endColumnIndex": startingIndex,
-                                                           },
-                                                 "rows": [],
-                                                 }
-                                 })
         values = [ubdfNFL.columns.values.tolist()] + ubdfNFL.values.tolist()
+        # create body for the google sheets batch update api
+        if checkProps['isProps']:
+            # set the props column index to the first time a props event appears
+            if not checkProps['didSetProps'][leagueIndex]:
+                checkProps['didSetProps'][leagueIndex] = True
+                checkProps['propsCols'][leagueIndex] = startingIndex - 5
+            # update the body dictionary to a single column
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": checkProps['propsCols'][leagueIndex],
+                                                               "startRowIndex": checkProps['propsRows'][leagueIndex],
+                                                               "endRowIndex": checkProps['propsRows'][leagueIndex] + 2,
+                                                               "endColumnIndex": checkProps['propsCols'][leagueIndex] + 1,
+                                                               },
+                                                     "rows": [{"values": [
+                                                         {"userEnteredValue": {"stringValue": key}}
+                                                     ]}, {"values": [
+                                                         {"userEnteredValue": {"stringValue": "Sundaytilt props"}}
+                                                     ]}
+                                                     ], }
+                                     })
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": checkProps['propsCols'][leagueIndex] + 1,
+                                                               "startRowIndex": checkProps['propsRows'][leagueIndex],
+                                                               "endColumnIndex": checkProps['propsCols'][leagueIndex] + 5,
+                                                               },
+                                                     "rows": [],
+                                                     }
+                                     })
+            checkProps['propsRows'][leagueIndex] += len(values)
+        # create body for the google sheets batch update api
+        else:
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": startingIndex - 5,
+                                                               "startRowIndex": 0,
+                                                               "endRowIndex": 2,
+                                                               "endColumnIndex": startingIndex - 4,
+                                                               },
+                                                     "rows": [{"values": [
+                                                         {"userEnteredValue": {"stringValue": key}}
+                                                     ]}, {"values": [
+                                                         {"userEnteredValue": {"stringValue": "Sundaytilt"}}
+                                                     ]}],
+                                                     }
+                                     })
+            body['requests'].append({"updateCells": {"fields": "userEnteredValue",
+                                                     "range": {"sheetId": worksheetNumber,
+                                                               "startColumnIndex": startingIndex - 4,
+                                                               "startRowIndex": 0,
+                                                               "endColumnIndex": startingIndex,
+                                                               },
+                                                     "rows": [],
+                                                     }
+                                     })
         for row in values:
             rowData = {"values": []}
             for element in row:
