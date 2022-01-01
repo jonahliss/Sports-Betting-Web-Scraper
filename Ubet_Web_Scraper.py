@@ -152,14 +152,16 @@ class SportDynamic:
         self.driver.find_element(By.ID, "ctl00_lnkSports").click()
 
         leagues = []
-        if 'CBB' in self.options:
+        if 'cbb' in self.options:
             leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEBASKETBALL'))
-        if 'NBA' in self.options:
+        if 'nba' in self.options:
             leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_BASKETBALL'))
-        if 'CFB' in self.options:
+        if 'cfb' in self.options:
             leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_COLLEGEFOOTBALL'))
-        if 'NFL' in self.options:
+        if 'nfl' in self.options:
             leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_FOOTBALL'))
+        if 'live' in self.options:
+            leagues.append(self.driver.find_element(By.CSS_SELECTOR, '#sport_IN-HOUSELIVEWAGERING'))
 
         for button in leagues:
             button = button.find_element(By.CSS_SELECTOR, '.divLeagueContainer > a')
@@ -238,7 +240,7 @@ gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 
 # Determining sports and leageus to scrape
-options = input('CBB, NBA, CFB, NFL\nWhat data do you want to scrape? ')
+options = input('cbb, nba, cfb, nfl, live\nWhat data do you want to scrape? ')
 
 # Executing scraping process
 website = SportDynamic('https://ubet.ag/', options)
