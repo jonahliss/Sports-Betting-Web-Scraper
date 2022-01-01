@@ -115,11 +115,17 @@ def formatTeamName(name):
 
 # Class to retrieve, sort, and return website data
 class SportDynamic:
-    def __init__(self, url):
+    def __init__(self, url, options):
         self.url = url
         self.soup = ""
         self.allBets = {}
-        self.sport = ""
+        self.options = {
+            'cbb': 'cbb' in options,
+            'nba': 'nba' in options,
+            'cfb': 'cfb' in options,
+            'nfl': 'nfl' in options,
+            'live': 'live' in options,
+        }
 
     def launchDriver(self):
         chrome_options = webdriver.ChromeOptions()
@@ -140,9 +146,12 @@ class SportDynamic:
     def navigateDriver(self):
         time.sleep(12)
         try:
-            self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='BASKETBALL'] a").click()
-            self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='HALFTIMES'] a").click()
-            self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='LIVE'] a").click()
+            if self.options['cbb'] or self.options['nba']:
+                self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='BASKETBALL'] a").click()
+                self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='FOOTBALL'] a").click()
+            if self.options['live']:
+                self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='LIVE'] a").click()
+                self.driver.find_element(By.CSS_SELECTOR, "div[data-allow='HALFTIMES'] a").click()
         except:
             pass
         self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.CONTROL + Keys.HOME)
@@ -152,7 +161,8 @@ class SportDynamic:
                                                "#{} > div > ul > li".format("LIVE"))
         enter_nfl = self.driver.find_elements(By.CSS_SELECTOR,
                                               "#{} > div > ul > li".format("FOOTBALL"))
-        enter_nfl[0].find_element(By.CSS_SELECTOR, 'div').click()
+        if self.options['cfb'] or self.options['nfl']:
+            enter_nfl[0].find_element(By.CSS_SELECTOR, 'div').click()
         enter_nba = self.driver.find_elements(By.CSS_SELECTOR,
                                               "#{} > div > ul > li".format("BASKETBALL"))
 
@@ -164,27 +174,51 @@ class SportDynamic:
         for checkbox in enter_nfl:
             try:
                 if checkbox.get_attribute("data-sub-event") != None:
-                    checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
-                    time.sleep(.5)
-                    nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
-                                                             "div[data-field='link-parent'] > div > ul > li")
+                    nested_checkbox = []
+                    if 'NFL' in checkbox.text and self.options['nfl']:
+                        checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
+                        time.sleep(.5)
+                        nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
+                                                                 "div[data-field='link-parent'] > div > ul > li")
+                    if 'NCAA' in checkbox.text and self.options['cfb']:
+                        checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
+                        time.sleep(.5)
+                        nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
+                                                                 "div[data-field='link-parent'] > div > ul > li")
                     for nested in nested_checkbox:
                         nested.find_element(By.CSS_SELECTOR, 'div').click()
                 else:
-                    checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+                    if 'NFL' in checkbox.text and self.options['nfl']:
+                        checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+                    if 'College' in checkbox.text and self.options['cfb']:
+                        checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+                    if 'NFL' not in checkbox.text and 'College' not in checkbox.text:
+                        checkbox.find_element(By.CSS_SELECTOR, 'div').click()
             except:
                 pass
         for checkbox in enter_nba:
             try:
                 if checkbox.get_attribute("data-sub-event") != None:
-                    checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
-                    time.sleep(.5)
-                    nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
-                                                             "div[data-field='link-parent'] > div > ul > li")
+                    nested_checkbox = []
+                    if 'NBA' in checkbox.text and self.options['nba']:
+                        checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
+                        time.sleep(.5)
+                        nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
+                                                                 "div[data-field='link-parent'] > div > ul > li")
+                    if 'NCAA' in checkbox.text and self.options['cbb']:
+                        checkbox.find_element(By.CSS_SELECTOR, '.accordion-heading').click()
+                        time.sleep(.5)
+                        nested_checkbox = checkbox.find_elements(By.CSS_SELECTOR,
+                                                                 "div[data-field='link-parent'] > div > ul > li")
                     for nested in nested_checkbox:
                         nested.find_element(By.CSS_SELECTOR, 'div').click()
                 else:
-                    checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+                    if 'NBA' in checkbox.text and self.options['nba']:
+                        checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+                    if 'NCAA' in checkbox.text and self.options['cbb']:
+                        checkbox.find_element(By.CSS_SELECTOR, 'div').click()
+                    if 'NBA' not in checkbox.text and 'NCAA' not in checkbox.text:
+                        checkbox.find_element(By.CSS_SELECTOR, 'div').click()
             except:
                 pass
 
@@ -301,8 +335,11 @@ class SportDynamic:
 gc = gspread.service_account(filename='credentials.json')
 sh = gc.open("BettingScraper")
 
+# Determining which sports and leagues to scrape
+options = input('cbb, nba, cfb, nfl, live\nWhat data do you want to scrape? (Please to not select both basketball and football) ')
+
 # Executing scraping process
-website = SportDynamic('https://www.sundaytilt.com/')
+website = SportDynamic('https://www.sundaytilt.com/', options)
 website.collectData()
 
 #%%
