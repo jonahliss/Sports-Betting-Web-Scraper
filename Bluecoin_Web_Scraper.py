@@ -314,13 +314,13 @@ while True:
 
     print('Starting')
 
-    startingIndexCBB = 2400
-    startingIndexNBA = 2400
-    startingIndexCFB = 2400
-    startingIndexNFL = 2400
-    startingIndex = 2400
+    startingIndexCBB = 2405
+    startingIndexNBA = 2405
+    startingIndexCFB = 2405
+    startingIndexNFL = 2405
+    startingIndex = 2405
     body = {"requests": []}
-    checkProps = {'isProps': False, 'didSetProps': [], 'propsCols': [], 'propsRows': [], 'propsLeagues': []}
+    checkProps = {'isProps': False, 'didSetProps': [], 'propsRows': [], 'propsLeagues': []}
 
     for key in website.allBets:
         ubdfNFL = website.displayData(key)
@@ -406,7 +406,6 @@ while True:
         # checks if the props for each league is new, and if so, resets the starting column and row
         if worksheet.id not in checkProps['propsLeagues']:
             checkProps['propsLeagues'].append(worksheet.id)
-            checkProps['propsCols'].append(-1)
             checkProps['propsRows'].append(0)
             checkProps['didSetProps'].append(False)
         leagueIndex = checkProps['propsLeagues'].index(worksheet.id)
@@ -418,15 +417,13 @@ while True:
             # set the props column index to the first time a props event appears
             if not checkProps['didSetProps'][leagueIndex]:
                 checkProps['didSetProps'][leagueIndex] = True
-                checkProps['propsCols'][leagueIndex] = startingIndex - 5
             # update the body dictionary to a single column
             body['requests'].append({"updateCells": {"fields": "userEnteredValue",
                                                      "range": {"sheetId": worksheetNumber,
-                                                               "startColumnIndex": checkProps['propsCols'][leagueIndex],
+                                                               "startColumnIndex": 2400,
                                                                "startRowIndex": checkProps['propsRows'][leagueIndex],
                                                                "endRowIndex": checkProps['propsRows'][leagueIndex] + 2,
-                                                               "endColumnIndex": checkProps['propsCols'][
-                                                                                     leagueIndex] + 1,
+                                                               "endColumnIndex": 2401,
                                                                },
                                                      "rows": [{"values": [
                                                          {"userEnteredValue": {"stringValue": key}}
@@ -437,11 +434,9 @@ while True:
                                      })
             body['requests'].append({"updateCells": {"fields": "userEnteredValue",
                                                      "range": {"sheetId": worksheetNumber,
-                                                               "startColumnIndex": checkProps['propsCols'][
-                                                                                       leagueIndex] + 1,
+                                                               "startColumnIndex": 2401,
                                                                "startRowIndex": checkProps['propsRows'][leagueIndex],
-                                                               "endColumnIndex": checkProps['propsCols'][
-                                                                                     leagueIndex] + 5,
+                                                               "endColumnIndex": 2405,
                                                                },
                                                      "rows": [],
                                                      }
